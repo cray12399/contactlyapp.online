@@ -1,7 +1,7 @@
 # How to work on this project
 
 A guide for getting set up and making changes. If you're new to Git, read this
-top to bottom once — it should take about 20 minutes to get running.
+top to bottom once. Setup takes about 20 minutes.
 
 ---
 
@@ -11,16 +11,16 @@ top to bottom once — it should take about 20 minutes to get running.
 goes. All work happens on your own computer.
 
 **2. Don't commit passwords.** Database passwords and API keys stay out of the
-repo. Once something is committed, it's in the history forever — deleting it
-later doesn't actually remove it. If you commit one by accident, tell Chris right
-away. It's a five-minute fix, not a disaster.
+repo. Once something is committed it stays in the history permanently, and
+deleting it later doesn't remove it. If you commit one by accident, tell Chris
+right away so we can change it.
 
 ---
 
 ## What we're building on
 
-The site runs on **PHP** with a **MySQL** database. To work on it, you need both
-of those running on your own machine. That's what the setup below does.
+The site runs on PHP with a MySQL database. To work on it you need both of those
+running on your own machine. The setup below installs them.
 
 ---
 
@@ -28,21 +28,21 @@ of those running on your own machine. That's what the setup below does.
 
 ### Step 1: Get Linux running
 
-**On Windows — use WSL.** It's Ubuntu Linux running inside Windows.
+**On Windows, use WSL.** It runs Ubuntu Linux inside Windows.
 
-Open **PowerShell as Administrator** (right-click → Run as administrator) and run:
+Open **PowerShell as Administrator** (right-click, then Run as administrator):
 
 ```powershell
 wsl --install -d Ubuntu-24.04
 ```
 
-Restart your computer. When Ubuntu opens, it asks you to make a username and
-password — write the password down, you'll need it for `sudo` commands. This is
-separate from your Windows password.
+Restart your computer. When Ubuntu opens it asks you to make a username and
+password. Write the password down, because you'll need it for `sudo` commands.
+It's separate from your Windows password.
 
 From now on, "open your terminal" means open the **Ubuntu** app, not PowerShell.
 
-**On Mac** — you already have a Unix terminal. Skip to Step 2 and use
+**On Mac** you already have a Unix terminal. Skip to Step 2 and use
 [Homebrew](https://brew.sh) instead of `apt`:
 `brew install php mysql git`
 
@@ -55,8 +55,8 @@ sudo apt update
 sudo apt install php php-mysql php-curl php-mbstring php-xml mysql-server git -y
 ```
 
-It'll ask for the password you just made. Typing shows nothing on screen — that's
-normal, keep typing and press Enter.
+It asks for the password you just made. Nothing appears on screen while you type
+it. That's normal. Keep typing and press Enter.
 
 Start the database:
 
@@ -64,7 +64,7 @@ Start the database:
 sudo service mysql start
 ```
 
-You'll need to run that line again each time you restart your computer.
+Run that line again each time you restart your computer.
 
 ### Step 3: Connect to GitHub
 
@@ -80,9 +80,9 @@ Press Enter three times to accept the defaults. Then show the key:
 cat ~/.ssh/id_ed25519.pub
 ```
 
-Copy the whole line it prints. On GitHub, click your profile picture →
-**Settings** → **SSH and GPG keys** → **New SSH key**. Paste it in, name it
-whatever you want, save.
+Copy the whole line it prints. On GitHub, click your profile picture, then
+**Settings**, then **SSH and GPG keys**, then **New SSH key**. Paste it in, give
+it any name, and save.
 
 Test it:
 
@@ -114,39 +114,25 @@ sudo mysql
 That opens a `mysql>` prompt. Paste these lines in:
 
 ```sql
-CREATE DATABASE contactly;
+CREATE DATABASE contactsdb;
 CREATE USER 'contactly'@'localhost' IDENTIFIED BY 'localpassword';
-GRANT ALL PRIVILEGES ON contactly.* TO 'contactly'@'localhost';
+GRANT ALL PRIVILEGES ON contactsdb.* TO 'contactly'@'localhost';
 EXIT;
 ```
 
 Then load the tables:
 
 ```bash
-mysql -u contactly -p contactly < database/schema.sql
+mysql -u contactly -p contactsdb < database/schema.sql
 ```
 
-The password is `localpassword` from above. This is only on your computer, so a
-simple password is fine.
+The password is `localpassword` from above. This database only exists on your
+computer, so a simple password is fine.
 
-> **TODO for Chris:** add `database/schema.sql` to the repo so this step works.
-> Create it on the server with:
-> `mysqldump --no-data -u USER -p DBNAME > schema.sql`
+That creates the `Users` and `Contacts` tables, the same ones the live site uses,
+with no data in them. Add your own test records as you go.
 
-### Step 6: Add your config file
-
-The file with database settings isn't in the repo (rule 2). Copy the example:
-
-```bash
-cp .env.example .env
-```
-
-Open it and set the database name, user, and password to what you made in Step 5.
-
-> **TODO for Chris:** confirm the real filename and make sure an `.example`
-> version is committed.
-
-### Step 7: Run it
+### Step 6: Run it
 
 ```bash
 php -S localhost:8000
@@ -156,7 +142,7 @@ Open **http://localhost:8000** in your browser. You should see the site.
 
 Leave that terminal window running while you work. `Ctrl+C` stops it.
 
-### Step 8 (optional): Edit in VS Code
+### Step 7 (optional): Edit in VS Code
 
 Install the **WSL** extension in VS Code. Then from your Ubuntu terminal, inside
 the project folder:
@@ -171,7 +157,7 @@ VS Code opens the project properly connected to Linux.
 
 ## Making changes
 
-Here's the loop you'll repeat every time you work on something.
+This is the loop you repeat every time you work on something.
 
 ### 1. Get the latest code
 
@@ -181,7 +167,7 @@ git pull origin main
 ```
 
 `main` is the official version of the project. Always start from an up-to-date
-copy, or you'll end up fighting merge conflicts later.
+copy, otherwise you'll end up fighting merge conflicts later.
 
 ### 2. Make a branch
 
@@ -189,7 +175,7 @@ copy, or you'll end up fighting merge conflicts later.
 git checkout -b login-page
 ```
 
-A branch is your own copy to experiment in. Nothing you do here affects anyone
+A branch is your own copy to experiment in. Nothing you do on it affects anyone
 else until you ask for it to be merged. Name it after what you're working on:
 `login-page`, `fix-signup-bug`, `contact-form`.
 
@@ -203,16 +189,17 @@ Edit files, refresh the browser, repeat.
 git status
 ```
 
-This shows what you changed. **Read it before moving on** — if you see `.env` or
-any file with passwords, stop and tell Chris.
+This shows what you changed. **Read it before moving on.** If you see `.env` or
+any file with passwords in it, stop and tell Chris.
 
 ```bash
 git add .
 git commit -m "Add validation to the login form"
 ```
 
-`add` picks which changes to save, `commit` saves them. Write a message that says
-what you did — "fix" or "changes" won't mean anything to anyone in two weeks.
+`add` picks which changes to save and `commit` saves them. Write a message that
+says what you did. A message like "fix" or "changes" won't mean anything to
+anyone in two weeks.
 
 You can commit as many times as you want. Committing often is good.
 
@@ -222,16 +209,16 @@ You can commit as many times as you want. Committing often is good.
 git push -u origin login-page
 ```
 
-After the first push on a branch, just `git push` works.
+After the first push on a branch, plain `git push` works.
 
 ### 6. Open a pull request
 
-Go to the repo on GitHub. There'll be a banner offering to open a pull request
-for your branch — click it.
+Go to the repo on GitHub. There will be a banner offering to open a pull request
+for your branch. Click it.
 
-A pull request (PR) is you saying "here's what I did, can someone look before it
-goes in?" Write a sentence or two about what you changed and how to test it.
-Screenshots are great for anything visual.
+A pull request is how you ask someone to look at your work before it goes into
+the project. Write a sentence or two about what you changed and how to test it.
+Add screenshots for anything visual.
 
 Someone else reviews it and merges it. Then you go back to step 1 for your next
 piece of work.
@@ -247,15 +234,16 @@ piece of work.
 
 ## Reviewing someone else's pull request
 
-Every PR needs one other person to approve it. To look at someone's work:
+Every pull request needs one other person to approve it. To look at someone's
+work:
 
 ```bash
 git fetch origin
 git checkout their-branch-name
 ```
 
-Run it, click around, see if it works. Leave comments on GitHub. Questions are
-useful — "why this way?" is a real review comment, not a criticism.
+Run it, click around, and see if it works. Leave comments on GitHub. Asking "why
+this way?" is a normal review comment and nobody will take it as criticism.
 
 When you're done, switch back:
 
@@ -274,7 +262,7 @@ Your SSH key isn't set up. Redo Step 3.
 MySQL isn't running. `sudo service mysql start`
 
 **Blank white page**
-A PHP error. Run this once to make errors visible:
+A PHP error is happening silently. Run this once to make errors visible:
 ```bash
 echo "display_errors = On" | sudo tee -a /etc/php/*/cli/php.ini
 ```
@@ -282,11 +270,12 @@ Then restart `php -S localhost:8000`.
 
 **`Your local changes would be overwritten by merge`**
 You have uncommitted work. Either commit it, or run `git stash` to set it aside
-(get it back with `git stash pop`).
+and `git stash pop` to get it back.
 
 **Merge conflict**
-Git found two people changing the same lines. Run `git merge --abort` to undo and
-ask for help — these are confusing the first few times and easy once shown.
+Git found two people changing the same lines. Run `git merge --abort` to undo,
+then ask for help. These are confusing the first few times and simple once
+somebody walks you through one.
 
 **Everything is slow (Windows)**
 Your project is in `/mnt/c/`. Move it to `~/projects`.
@@ -295,7 +284,7 @@ Your project is in `/mnt/c/`. Move it to `~/projects`.
 ```bash
 git checkout .
 ```
-Undoes all uncommitted changes. Your committed work is safe.
+That undoes all uncommitted changes. Anything you already committed is safe.
 
 ---
 
@@ -303,7 +292,7 @@ Undoes all uncommitted changes. Your committed work is safe.
 
 ```
 .env or any config file with real passwords
-*.sql database dumps
+*.sql database dumps (database/schema.sql is the one exception)
 vendor/  or  node_modules/
 uploads/
 ```
@@ -312,8 +301,6 @@ uploads/
 
 ## Stuck?
 
-Ask. Don't spend an hour on setup — that's not the part you're being graded on.
-When you ask, include the command you ran and the exact error message.
-
-> **TODO for Chris:** where should people ask — group chat, Discord, GitHub
-> Issues?
+Ask in the group chat. Don't spend an hour stuck on setup, because that isn't the
+part you're being graded on. Include the command you ran and the exact error
+message you got.
