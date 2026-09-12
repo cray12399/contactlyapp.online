@@ -19,5 +19,5 @@ node_modules/
 cache/
 .DS_Store
 
-# Database credentials (copy includes/db.example.php to includes/db.php)
-includes/db.php
+.env
+!.env.example
