@@ -3,6 +3,8 @@
 wp-config.php
 config.php
 *.sql
+!database/schema.sql
+!database/seed.sql
 
 # user uploads
 uploads/
