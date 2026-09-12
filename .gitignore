@@ -18,3 +18,6 @@ node_modules/
 *.log
 cache/
 .DS_Store
+
+# Database credentials (copy includes/db.example.php to includes/db.php)
+includes/db.php
