@@ -299,8 +299,3 @@ uploads/
 
 ---
 
-## Stuck?
-
-Ask in the group chat. Don't spend an hour stuck on setup, because that isn't the
-part you're being graded on. Include the command you ran and the exact error
-message you got.
