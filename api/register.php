@@ -21,6 +21,8 @@ if (
     !isset($data['firstName']) ||
     !isset($data['lastName']) ||
     !isset($data['userName']) ||
+    !isset($data['email']) ||
+    !isset($data['phoneNumber']) ||
     !isset($data['password'])
 ) {
     http_response_code(400);
@@ -34,6 +36,8 @@ if (
 $firstName = trim($data['firstName']);
 $lastName = trim($data['lastName']);
 $userName = trim($data['userName']);
+$email = trim($data['email']);
+$phoneNumber = trim($data['phoneNumber']);
 $password = $data['password'];
 
 // Make sure none of the fields are empty
@@ -41,6 +45,8 @@ if (
     $firstName === '' ||
     $lastName === '' ||
     $userName === '' ||
+    $email === '' ||
+    $phoneNumber === '' ||
     $password === ''
 ) {
     http_response_code(400);
@@ -76,7 +82,7 @@ $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 // Create the new user
 $stmt = $conn->prepare(
     'INSERT INTO Users (firstName, lastName, userName, password)
-     VALUES (?, ?, ?, ?)'
+     VALUES (?, ?, ?, ?, ?, ?)'
 );
 
 $stmt->bind_param(
@@ -84,6 +90,8 @@ $stmt->bind_param(
     $firstName,
     $lastName,
     $userName,
+    $email,
+    $phoneNumber,
     $hashedPassword
 );
 
