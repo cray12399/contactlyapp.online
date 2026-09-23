@@ -59,6 +59,7 @@ CREATE TABLE `Users` (
   `password` varchar(250) NOT NULL,
   `dateCreated` datetime DEFAULT CURRENT_TIMESTAMP,
   `dateUpdated` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `role` int NOT NULL DEFAULT '1', -- 0 = Disabled, 1 = User, 2 = Admin
   PRIMARY KEY (`id`),
   UNIQUE KEY usersEmailNormalizedUK (email),
   KEY usersPhoneNormalizedUK (phoneNumber),
@@ -80,6 +81,7 @@ CREATE TABLE `Users` (
 
 -- normalize email and phone number 
 -- (this is before anything is inserted, if table contains data already it wont be normalized)
+-- `password` is hashed (argon2id) by the API before it reaches these triggers, not here
 
 -- make '$$' a delimiter so trigger block isn't broken up by semicolons
 DELIMITER $$ 
@@ -136,164 +138,164 @@ START TRANSACTION;
 -- -------------------------------------------------------------------------
 
 -- US common-name users
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(1, 'James', 'Smith', 'xX_jim0_Xx', 'james.smith@gmail.com', '12121000000', '$2b$12$oBxONf/zJelvee0IUfmJJz.RRTACAJccxaE0NX8D0D5c'),
-(2, 'Mary', 'Davis', 'mary', 'marydavis@yahoo.com', '13051007919', '$argon2id$v=19$m=65536,t=3,p=4$sl4ePyOUiRFH$sl4ePyOUiRFHnf34sMWw/1CQiF7OQVhp'),
-(3, 'Michael', 'Johnson', 'michael', 'mjohnson@hotmail.com', '14071015838', 'SHA1$=Vt)89#g7#dz)AB:V7_EF#1m<vd{$rQgDYw'),
-(4, 'Patricia', 'Rodriguez', 'pat', 'patricia_rodriguez@outlook.com', '14151023757', '$2b$12$urweJiFh2nngxWyGVR4uvl.ytGeBKJt45U7TCjpGZLf0'),
-(5, 'Robert', 'Williams', 'robert', 'robert.williams4@icloud.com', '15121031676', '$argon2id$v=19$m=65536,t=3,p=4$i5Du+hNl6IlV$i5Du+hNl6IlVYyAMoW+3ISibpsr585YO'),
-(6, 'Jennifer', 'Martinez', 'jennifer', 'jennifer.martinez@aol.com', '16171039595', 'SHA1$-Cv_Pj*P8]F8^fJ]bX^Lx>/6*T4+$3bSjNY'),
-(7, 'John', 'Brown', 'john', 'johnbrown@live.com', '17021047514', '$2b$12$JHyQFJJ3vjr0yGE+MnQhCw.xWaj0KmPi4UwSzll0CwUE'),
-(8, 'Linda', 'Hernandez', 'linda', 'lhernandez@msn.com', '17181055433', '$argon2id$v=19$m=65536,t=3,p=4$XMZgDRZVsY2V$XMZgDRZVsY2VS08LMqNA5xpzuu4pf08E'),
-(9, 'David', 'Jones', 'david', 'david_jones@comcast.net', '13121063352', 'SHA1$(Jd;e5%aU(Wc?t5|zc/4r{M3#IJ>$Pkvwvw'),
-(10, 'Elizabeth', 'Lopez', 'liz', 'elizabeth.lopez9@verizon.net', '12131071271', '$2b$12$ExwL3JyzvVN1gxws+5bp7a.TQajbjYFJB+ZHR+xfvn7U'),
-(11, 'William', 'Garcia', 'william', 'william.garcia@att.net', '14041079190', '$argon2id$v=19$m=65536,t=3,p=4$J2To/c/3WNd8$J2To/c/3WNd8OD9PBvYdnvKoyIw61tMS'),
-(12, 'Barbara', 'Gonzalez', '~barbara~11', 'barbaragonzalez@sbcglobal.net', '12061087109', 'SHA1$=xg!NF>hS*3U(79=CO}zJ^uy-cb*$5x6Km8'),
-(13, 'Richard', 'Miller', 'rick', 'rmiller@protonmail.com', '12141095028', '$2b$12$zV1Pn0+yuQSsVMIrgThkOc.InULrED2lrYyPDCcN4sm8'),
-(14, 'Susan', 'Wilson', 'susan', 'susan_wilson@gmx.com', '13031102947', '$argon2id$v=19$m=65536,t=3,p=4$9JFUSHaqFoBw$9JFUSHaqFoBwt0pFJqHrwmitV5ExvRPS'),
-(15, 'Joseph', 'Davis', 'joseph', 'joseph.davis14@mail.com', '14801110866', 'SHA1$=z4}4U[yk>yx*A/}8Z%C+~b9[BV^$fkpxo8'),
-(16, 'Jessica', 'Anderson', 'jessica', 'jessica.anderson@zoho.com', '16021118785', '$2b$12$DPUvD12j+DYOl12az7sM5Q.GcHYlDbBdlB6JRUgRvW1w'),
-(17, 'Thomas', 'Rodriguez', 'thomas', 'thomasrodriguez@fastmail.com', '16461126704', '$argon2id$v=19$m=65536,t=3,p=4$sUfV59xfXuQV$sUfV59xfXuQVmZP5SVwHEJAgo3tuw8zB'),
-(18, 'Sarah', 'Thomas', 'sarah', 'sthomas@earthlink.net', '17731134623', 'SHA1$;3i!nP_+9/+v@KU$T1|+U>uy~N1{$ocmFTU'),
-(19, 'Christopher', 'Martinez', 'chris', 'christopher_martinez@juno.com', '18321142542', '$2b$12$R7VWGB1ZyZl0hPFQAqKByZ.mEMYc0eTCVngQKcZMRHkc'),
-(20, 'Karen', 'Taylor', 'karen', 'karen.taylor19@netzero.net', '19041150461', '$argon2id$v=19$m=65536,t=3,p=4$+zZiFwe+d0NN$+zZiFwe+d0NNnWLqRFNaPKpS0Bgi0OjG'),
-(21, 'Charles', 'Hernandez', 'charles', 'charles.hernandez@lycos.com', '16151158380', 'SHA1$:DD}RS(Ti-Tx=AI-W/!0j)Q0=lz=$aPlF1k'),
-(22, 'Nancy', 'Moore', 'nancy', 'nancymoore@gmail.com', '19011166299', '$2b$12$yBK5VqjURkmxIZunsx0r7i.fugaZlic2x2mc8oUh+gXU'),
-(23, 'Daniel', 'Lopez', 'd_a_n_i', 'dlopez@yahoo.com', '12161174218', '$argon2id$v=19$m=65536,t=3,p=4$QbAYMUVj2Vjw$QbAYMUVj2VjwLfhiiAw9kaWSSkSQd1Dk'),
-(24, 'Lisa', 'Jackson', 'lisa', 'lisa_jackson@hotmail.com', '14121182137', 'SHA1$+y+[KG/jZ|r5}g9!X8;l6#G3_+H[$Ef+BlU'),
-(25, 'Matthew', 'Gonzalez', 'matt', 'matthew.gonzalez24@outlook.com', '15031190056', '$2b$12$iP559GmAKjw24j3rjcWsFV.0Goox2K0NAc9ZqWCFKWYA'),
-(26, 'Margaret', 'Martin', 'margaret', 'margaret.martin@icloud.com', '16191197975', '$argon2id$v=19$m=65536,t=3,p=4$Qna5ogVSFWPz$Qna5ogVSFWPz3PRY4jJHsspaD2cQNaKw'),
-(27, 'Anthony', 'Wilson', 'anthony', 'anthonywilson@aol.com', '12101205894', 'SHA1$!mY?Zb!Un]a6+UY<wb;6L[G3}zt=$3Gwn2M'),
-(28, 'Betty', 'Lee', 'betty', 'blee@live.com', '14691213813', '$2b$12$9NF/SV2uKxEx9Rnq1qr+y4.W4WfH2Y3UPk622hJcEnEY'),
-(29, 'Mark', 'Anderson', 'mark', 'mark_anderson@msn.com', '18131221732', '$argon2id$v=19$m=65536,t=3,p=4$r7YCvziTr3K0$r7YCvziTr3K0MteH04u4IqnSSSoJaJzb'),
-(30, 'Sandra', 'Perez', 'sandra', 'sandra.perez29@comcast.net', '19411229651', 'SHA1$^0U}kw^aU%pJ_G/_JH?QP>nc@1y#$hXocHA'),
-(31, 'Donald', 'Thomas', 'don', 'donald.thomas@verizon.net', '18501237570', '$2b$12$fprnB5ix8d4gNhABinb/+y.U9tDo1Az8LnyBi8MbtJYc'),
-(32, 'Ashley', 'Thompson', 'ashley', 'ashleythompson@att.net', '17271245489', '$argon2id$v=19$m=65536,t=3,p=4$+wsh1tWudz9Q$+wsh1tWudz9Q+lUSvehTKQDUsXvPPaIo'),
-(33, 'Steven', 'Taylor', 'steven', 'staylor@sbcglobal.net', '19411253408', 'SHA1$|LI+P8[Aq;57^T3?U5/Fz!eC;KS/$DlGBo8'),
-(34, 'Dorothy', 'White', 'd0ot_33', 'dorothy_white@protonmail.com', '15611261327', '$2b$12$WE6o6DnjyPJnPuwQ0yOUB0.tnPCmzlO1Dy+X0+dDGJ6c'),
-(35, 'Paul', 'Moore', 'paul', 'paul.moore34@gmx.com', '19541269246', '$argon2id$v=19$m=65536,t=3,p=4$diBcLwTOglm/$diBcLwTOglm/N71axo0qqq4k+sYIZVVQ'),
-(36, 'Kimberly', 'Harris', 'kimberly', 'kimberly.harris@mail.com', '17861277165', 'SHA1$/km^1U!7G~o+]6I&Q1<oB$BN[b+_$MsPuS0'),
-(37, 'Andrew', 'Jackson', 'andrew', 'andrewjackson@zoho.com', '13211285084', '$2b$12$JZOuUdcGm0k+Tlmj7HsoJs.8b7nJ1X/48Fi8FVgEYoto'),
-(38, 'Emily', 'Sanchez', 'emily', 'esanchez@fastmail.com', '13521293003', '$argon2id$v=19$m=65536,t=3,p=4$RnKuRD8aJ8BJ$RnKuRD8aJ8BJfgadI8nsZ3iBEcHYtKa4'),
-(39, 'Joshua', 'Martin', 'joshua', 'joshua_martin@earthlink.net', '13861300922', 'SHA1$*ZU>MA(ZV>Vy?AJ~zd[zg/sR#IE($PvSExE'),
-(40, 'Donna', 'Clark', 'donna', 'donna.clark39@juno.com', '12121308841', '$2b$12$Cn9aSiOq44bNKIMN1bdc27.iMPwJKLJG4C042zPCkzqg');
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(1, 'James', 'Smith', 'xX_jim0_Xx', 'james.smith@gmail.com', '12121000000', '$argon2id$v=19$m=65536,t=3,p=4$PtYgjmUhBel31iEl$2hpChYgCfrL1spNxnyVmihA/2O76UMFx', 1),
+(2, 'Mary', 'Davis', 'mary', 'marydavis@yahoo.com', '13051007919', '$argon2id$v=19$m=65536,t=3,p=4$FkM/R5Kjp1vRt+1f$jORS/6ilI8ihN5KXSc7Tvo/hBKqFYY/k', 2),
+(3, 'Michael', 'Johnson', 'michael', 'mjohnson@hotmail.com', '14071015838', '$argon2id$v=19$m=65536,t=3,p=4$v5ZJr3J1TWDtkwtD$Db+xHKas1VOqg6YYZYn9ZhyiA4uoRgna', 1),
+(4, 'Patricia', 'Rodriguez', 'pat', 'patricia_rodriguez@outlook.com', '14151023757', '$argon2id$v=19$m=65536,t=3,p=4$tmUdjAWtGSU8po+7$99NksnRH9ucAUsdMlHUvTCQCyEZDz/Td', 1),
+(5, 'Robert', 'Williams', 'robert', 'robert.williams4@icloud.com', '15121031676', '$argon2id$v=19$m=65536,t=3,p=4$dJ8HyS5SUkCnD8zR$A9a9SkpXz9w3QlY7Zkuvqdt7s8Stqcbn', 1),
+(6, 'Jennifer', 'Martinez', 'jennifer', 'jennifer.martinez@aol.com', '16171039595', '$argon2id$v=19$m=65536,t=3,p=4$r3yBdGBLEPH1qhT6$1qtc4xatws8phP9nhFyJfm5di4PzJ59F', 1),
+(7, 'John', 'Brown', 'john', 'johnbrown@live.com', '17021047514', '$argon2id$v=19$m=65536,t=3,p=4$Hz5r1pY4OjE2jBMp$tUsGr7CmY+uCu3ZR1zTOlUcR64cXQLio', 1),
+(8, 'Linda', 'Hernandez', 'linda', 'lhernandez@msn.com', '17181055433', '$argon2id$v=19$m=65536,t=3,p=4$DnkHIfxIq2HZt/Pl$Jhx2jIclHkCiHp6bR1IqfEouHgxzNNAL', 1),
+(9, 'David', 'Jones', 'david', 'david_jones@comcast.net', '13121063352', '$argon2id$v=19$m=65536,t=3,p=4$5wIScGebcy8F5n3/$YNBDRzrZSgqbjG3uhkWKFLf6xuI5aHUQ', 1),
+(10, 'Elizabeth', 'Lopez', 'liz', 'elizabeth.lopez9@verizon.net', '12131071271', '$argon2id$v=19$m=65536,t=3,p=4$PFeNBTxaQWk8JzFa$lHlsZfYcMMDktXP/tKsf2rcDkdfrUnW5', 0),
+(11, 'William', 'Garcia', 'william', 'william.garcia@att.net', '14041079190', '$argon2id$v=19$m=65536,t=3,p=4$gcF+Ha6ili8GjHEA$D6/Wj9KfzjsQGMrb9h+ImB+LK777pzNk', 1),
+(12, 'Barbara', 'Gonzalez', '~barbara~11', 'barbaragonzalez@sbcglobal.net', '12061087109', '$argon2id$v=19$m=65536,t=3,p=4$8cL6j5IXAAjlsHUq$JoUD/+Ydua+5ZMs1SWOpQaPRYpzbLGVi', 1),
+(13, 'Richard', 'Miller', 'rick', 'rmiller@protonmail.com', '12141095028', '$argon2id$v=19$m=65536,t=3,p=4$YXjU2JgJngKtFI3O$yV2dZAkg05rK+gqv81RKMGHZEM9Ypvuj', 1),
+(14, 'Susan', 'Wilson', 'susan', 'susan_wilson@gmx.com', '13031102947', '$argon2id$v=19$m=65536,t=3,p=4$A/C5Q52ryFlwRlOE$VHzc0X0AWIRh/JUqBlIFXZ53Ncqe28+a', 1),
+(15, 'Joseph', 'Davis', 'joseph', 'joseph.davis14@mail.com', '14801110866', '$argon2id$v=19$m=65536,t=3,p=4$jY75FnCttn6kfaqD$eMqG3omjMyXHCabM6JOF8EFd0Nhcy/1k', 1),
+(16, 'Jessica', 'Anderson', 'jessica', 'jessica.anderson@zoho.com', '16021118785', '$argon2id$v=19$m=65536,t=3,p=4$GD2VD/eR1UYzaLiA$/zNyD7CHLn/xC+1hsYgBds1ghxY5Ookv', 0),
+(17, 'Thomas', 'Rodriguez', 'thomas', 'thomasrodriguez@fastmail.com', '16461126704', '$argon2id$v=19$m=65536,t=3,p=4$Qyx7eNWVQ4vnakJk$S1pAWTN3lg8zV5yPU8d0FZfWe7ihGyiR', 1),
+(18, 'Sarah', 'Thomas', 'sarah', 'sthomas@earthlink.net', '17731134623', '$argon2id$v=19$m=65536,t=3,p=4$UIQfHOJMaidDn87X$G3/q/xbMtEPO6UkzYuF0ie9Pu2njHkAm', 1),
+(19, 'Christopher', 'Martinez', 'chris', 'christopher_martinez@juno.com', '18321142542', '$argon2id$v=19$m=65536,t=3,p=4$1/5wDr16EpLLJIVG$Hz4FxFEtKyPiYGFDm7ena8D5VfLDpgyy', 1),
+(20, 'Karen', 'Taylor', 'karen', 'karen.taylor19@netzero.net', '19041150461', '$argon2id$v=19$m=65536,t=3,p=4$jVw5HanSBeVRsfAG$eAbP0VxNjAe/9i0mYtluYI0KN1gNT11c', 1),
+(21, 'Charles', 'Hernandez', 'charles', 'charles.hernandez@lycos.com', '16151158380', '$argon2id$v=19$m=65536,t=3,p=4$UzYZAa3u2olZU6uq$bgsYlVvsSKuvinX+zMqf9OgXluCZz8xB', 1),
+(22, 'Nancy', 'Moore', 'nancy', 'nancymoore@gmail.com', '19011166299', '$argon2id$v=19$m=65536,t=3,p=4$fZuXTptFyfePpX6N$1NF2XV54wca+7E56w8ZniqT3Ul4ffqkO', 1),
+(23, 'Daniel', 'Lopez', 'd_a_n_i', 'dlopez@yahoo.com', '12161174218', '$argon2id$v=19$m=65536,t=3,p=4$kgWrdioyq+KvCiSG$uPJ6sG9AHEOVezxZuJPWvHogU5nGYVHW', 1),
+(24, 'Lisa', 'Jackson', 'lisa', 'lisa_jackson@hotmail.com', '14121182137', '$argon2id$v=19$m=65536,t=3,p=4$VsUQk4DwgLGNOaeC$tL31Ugq+DfcgaTMnTC0MrAU8urbFt5mi', 1),
+(25, 'Matthew', 'Gonzalez', 'matt', 'matthew.gonzalez24@outlook.com', '15031190056', '$argon2id$v=19$m=65536,t=3,p=4$sIZHbhS4/FvafhdZ$xEuhnbzs0z1wNiMg9aW37k5wCnHDepQH', 1),
+(26, 'Margaret', 'Martin', 'margaret', 'margaret.martin@icloud.com', '16191197975', '$argon2id$v=19$m=65536,t=3,p=4$gI3HLBkbvHEzuPyX$QEW88ad3DNBYjvsedonuSsddfrfifiUz', 1),
+(27, 'Anthony', 'Wilson', 'anthony', 'anthonywilson@aol.com', '12101205894', '$argon2id$v=19$m=65536,t=3,p=4$iXnFAAoeelK9mqmA$LOR2HcSGKgVP8Kd0d3mS8gBlKv3azKga', 1),
+(28, 'Betty', 'Lee', 'betty', 'blee@live.com', '14691213813', '$argon2id$v=19$m=65536,t=3,p=4$S+m+x/SHuKBD/vok$+nPTmZYl2dVAMH2vWD6qeSPt5Pv74GDq', 1),
+(29, 'Mark', 'Anderson', 'mark', 'mark_anderson@msn.com', '18131221732', '$argon2id$v=19$m=65536,t=3,p=4$Q7EyIMttFPSuEPyH$nvnzXtsMM3JznnJAX7ebZ3CL7csGZaF3', 1),
+(30, 'Sandra', 'Perez', 'sandra', 'sandra.perez29@comcast.net', '19411229651', '$argon2id$v=19$m=65536,t=3,p=4$1DDxp63OHm1FZuG2$96c0xPbX+neGBuzSm6A8cVR06AxYpThG', 1),
+(31, 'Donald', 'Thomas', 'don', 'donald.thomas@verizon.net', '18501237570', '$argon2id$v=19$m=65536,t=3,p=4$JWZhbj11THnCMZCY$7Bvqiy8CsT07Lq8TDIWG2x9aJTFMP9+2', 1),
+(32, 'Ashley', 'Thompson', 'ashley', 'ashleythompson@att.net', '17271245489', '$argon2id$v=19$m=65536,t=3,p=4$kUtMXhkPrSbbAjLG$msDx5StAZvlMz/Bk4opH1Dr8/h97s+F/', 1),
+(33, 'Steven', 'Taylor', 'steven', 'staylor@sbcglobal.net', '19411253408', '$argon2id$v=19$m=65536,t=3,p=4$vauP7/L7V21jxUdc$fQm9+seB1qRmUR8AK3R2GgLLT/ZQISA/', 1),
+(34, 'Dorothy', 'White', 'd0ot_33', 'dorothy_white@protonmail.com', '15611261327', '$argon2id$v=19$m=65536,t=3,p=4$pQyOMqlfZZgZMnaf$y8hWskBf6wmxe1mbVrNHMx1eOc3g/fp1', 1),
+(35, 'Paul', 'Moore', 'paul', 'paul.moore34@gmx.com', '19541269246', '$argon2id$v=19$m=65536,t=3,p=4$Z5ibXt80nk8Btb2a$bplBpq8cJF5xgUskL/6GgebhbkXNNv+h', 1),
+(36, 'Kimberly', 'Harris', 'kimberly', 'kimberly.harris@mail.com', '17861277165', '$argon2id$v=19$m=65536,t=3,p=4$OV48vsoUu19X5IQL$JhQbtN2FWXWD5KaPHI2ufKssJ/Sk+WzD', 1),
+(37, 'Andrew', 'Jackson', 'andrew', 'andrewjackson@zoho.com', '13211285084', '$argon2id$v=19$m=65536,t=3,p=4$NhY7AGbX6lTiDYHP$9zyBylxLUTZtFf/VnV7ktOdSJcmeA+BH', 1),
+(38, 'Emily', 'Sanchez', 'emily', 'esanchez@fastmail.com', '13521293003', '$argon2id$v=19$m=65536,t=3,p=4$J2m5qGeRzxWkdgeV$6+iYplGODlYx5uVECweGThdgH9hmsOaz', 1),
+(39, 'Joshua', 'Martin', 'joshua', 'joshua_martin@earthlink.net', '13861300922', '$argon2id$v=19$m=65536,t=3,p=4$M4n8PVGXpV9Wv4Es$b7yeuCjVr5mXcj5RPD9oUsQChx5s4tI1', 1),
+(40, 'Donna', 'Clark', 'donna', 'donna.clark39@juno.com', '12121308841', '$argon2id$v=19$m=65536,t=3,p=4$0FtdILQvH+nO69ot$hB9KpGzU3HEEmXL1uhLsc4Rr4aKxU3f0', 1);
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(41, 'Kenneth', 'Lee', 'kenneth', 'kenneth.lee@netzero.net', '13051316760', '$argon2id$v=19$m=65536,t=3,p=4$L1fCW2LpqPsX$L1fCW2LpqPsX87SlqOc0tcCTrd5JBsfV'),
-(42, 'Michelle', 'Ramirez', 'michelle', 'michelleramirez@lycos.com', '14071324679', 'SHA1$?ZA+JS~TZ^mQ_Wi*9J-Rv[7S_Mg*$ebknGg'),
-(43, 'Kevin', 'Perez', 'kevin', 'kperez@gmail.com', '14151332598', '$2b$12$N3xSkflnA/wKFmnJpUP8+u.zYXRQWEpVCktK3gCmy9R4'),
-(44, 'Carol', 'Lewis', 'carol', 'carol_lewis@yahoo.com', '15121340517', '$argon2id$v=19$m=65536,t=3,p=4$8S+Ra2QiqtVO$8S+Ra2QiqtVOkVwWCAJJ2M29FI1tKBTl'),
-(45, 'Brian', 'Thompson', 'brian_55', 'brian.thompson44@hotmail.com', '16171348436', 'SHA1$_Aa-wh;1l@AM{xM-Ks!yj?27~N/]$fmYi+0'),
-(46, 'Amanda', 'Robinson', 'amanda', 'amanda.robinson@outlook.com', '17021356355', '$2b$12$fSoxncct9dB4e11s7WuOFS.TFoB7cwhOSfAO/iKEHxsc'),
-(47, 'George', 'White', 'george', 'georgewhite@icloud.com', '17181364274', '$argon2id$v=19$m=65536,t=3,p=4$KDOV1aYwqjjz$KDOV1aYwqjjzU1tzvFDFYvdik7F8X9ZN'),
-(48, 'Melissa', 'Walker', 'melissa', 'mwalker@aol.com', '13121372193', 'SHA1$;8l{kh?o5&Sn:Oq<li_Uf_1u[Gg)$9l56hk'),
-(49, 'Timothy', 'Harris', 'tim', 'timothy_harris@live.com', '12131380112', '$2b$12$kYxRK1i6epp9p5Bhr2ibAy.L3JpmgqxRqnprR6aPMdso'),
-(50, 'Deborah', 'Young', 'deborah', 'deborah.young49@msn.com', '14041388031', '$argon2id$v=19$m=65536,t=3,p=4$d8r+1h3CWhmD$d8r+1h3CWhmDPouOXQ6qznR2D1LL4PLi'),
-(51, 'Ronald', 'Sanchez', 'ronald', 'ronald.sanchez@comcast.net', '12061395950', 'SHA1$]/S^bd$Rn]F6_0R/WE[hz$6v&uc]$0osnhY'),
-(52, 'Stephanie', 'Allen', 'steph', 'stephanieallen@verizon.net', '12141403869', '$2b$12$2u+FrI43EXu+UlSbmxLso3.rpDmk3qNFwenOJLAd5QJA'),
-(53, 'Edward', 'Clark', 'edward', 'eclark@att.net', '13031411788', '$argon2id$v=19$m=65536,t=3,p=4$ObcxNuWpBhZF$ObcxNuWpBhZFpGDNyNY2ktOab8WnpZ+Y'),
-(54, 'Rebecca', 'King', 'rebecca', 'rebecca_king@sbcglobal.net', '14801419707', 'SHA1$:Ng(cJ^Ou%hq;DC-E9]fW/jS$cc]$fSdkEc'),
-(55, 'Jason', 'Ramirez', 'jason', 'jason.ramirez54@protonmail.com', '16021427626', '$2b$12$fR/dWjQIXSuAwDm7tkGNAc.OE5Yjuf915J/jcFdBMNlk'),
-(56, 'Sharon', 'Wright', '!!sharon!!', 'sharon.wright@gmx.com', '16461435545', '$argon2id$v=19$m=65536,t=3,p=4$TfsGqIIv8ldv$TfsGqIIv8ldvsrmRO2EKCIL0tbZLsSMH'),
-(57, 'Jeffrey', 'Lewis', 'jeffrey', 'jeffreylewis@mail.com', '17731443464', 'SHA1$?+s[Dh%0U-vK}tK<ef$+F(RG(YB]$dk5kgk'),
-(58, 'Laura', 'Scott', 'laura', 'lscott@zoho.com', '18321451383', '$2b$12$y94Idj2hgJmnbv9UR+I/j9.pNi9Li7VYuBzPmhvEVjco'),
-(59, 'Ryan', 'Robinson', 'ryan', 'ryan_robinson@fastmail.com', '19041459302', '$argon2id$v=19$m=65536,t=3,p=4$4lsNL3jVm+jX$4lsNL3jVm+jXyO0MMK1bRTwbUbYhmAK1'),
-(60, 'Cynthia', 'Torres', 'cynthia', 'cynthia.torres59@earthlink.net', '16151467221', 'SHA1$:EV$03#za#9n(o1&CM?vB*WN;41}$X8xejA'),
-(61, 'Jacob', 'Walker', 'jacob', 'jacob.walker@juno.com', '19011475140', '$2b$12$UfITodZAg7cA15Y0xvYHVI.Gw7KtlYxAG0lVGN3hExjs'),
-(62, 'Kathleen', 'Nguyen', 'kathleen', 'kathleennguyen@netzero.net', '12161483059', '$argon2id$v=19$m=65536,t=3,p=4$77F+Tr/3MuG+$77F+Tr/3MuG+P+6OBNOqHqnO9jNXdQoZ'),
-(63, 'Gary', 'Young', 'gary', 'gyoung@lycos.com', '14121490978', 'SHA1$*YY>Sj~zz{WK%K5$oD)rh>E0]3q+$/M7LFA'),
-(64, 'Amy', 'Hill', 'amy', 'amy_hill@gmail.com', '15031498897', '$2b$12$f/FWM9gO/4LBO/ldcxWqlO.NO0OxIrWq/ASeME16JfE0'),
-(65, 'Nicholas', 'Allen', 'nicholas', 'nicholas.allen64@yahoo.com', '16191506816', '$argon2id$v=19$m=65536,t=3,p=4$DVoWcuQC0VnZ$DVoWcuQC0VnZzlRNPFs8oKUjewixJEo1'),
-(66, 'Shirley', 'Flores', 'shirley', 'shirley.flores@hotmail.com', '12101514735', 'SHA1$*Tb|ei{wR+KD=eC%w0+Io$gA)/1)$+Wi6gs'),
-(67, 'Eric', 'King', 'xX_eric66_Xx', 'ericking@outlook.com', '14691522654', '$2b$12$4BhoCiXkTiuh0XWlTOh8CS.P+9MiW97FczKy6h5oGpjQ'),
-(68, 'Angela', 'Green', 'angela', 'agreen@icloud.com', '18131530573', '$argon2id$v=19$m=65536,t=3,p=4$hZT8HQThmcRJ$hZT8HQThmcRJwgA8+T8agdnyUvKATItX'),
-(69, 'Jonathan', 'Wright', 'jonathan', 'jonathan_wright@aol.com', '19411538492', 'SHA1$$Xj~td^+7<gT[al=XA)oQ>hM)5N+$wl+1ac'),
-(70, 'Helen', 'Adams', 'helen', 'helen.adams69@live.com', '18501546411', '$2b$12$All1D6c6Nkem7+Pz6kzG1o.slNYcHR/q2SPLsNNyb+Do'),
-(71, 'Stephen', 'Scott', 'stephen', 'stephen.scott@msn.com', '17271554330', '$argon2id$v=19$m=65536,t=3,p=4$qHWb2xhdpMEu$qHWb2xhdpMEuihKimfE8SbeTN5cDngaP'),
-(72, 'Anna', 'Nelson', 'anna', 'annanelson@comcast.net', '19411562249', 'SHA1$?e3#7J;Gl}rU/w7%Zs]wO:jn@x2=$aWca98'),
-(73, 'Larry', 'Torres', 'larry', 'ltorres@verizon.net', '15611570168', '$2b$12$5QnEBx4Vjzxr8/Dm5J6FF/./Zq8tD9T+HDoHFj0KZ/cA'),
-(74, 'Brenda', 'Baker', 'brenda', 'brenda_baker@att.net', '19541578087', '$argon2id$v=19$m=65536,t=3,p=4$dgCyPH4RVmLl$dgCyPH4RVmLlTIlXf5mXTLo+PWkzBXFw'),
-(75, 'Justin', 'Nguyen', 'justin', 'justin.nguyen74@sbcglobal.net', '17861586006', 'SHA1$?yt-DH~9M]wO}9w/RZ%rm!Fd<O9)$1a1zzA');
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(41, 'Kenneth', 'Lee', 'kenneth', 'kenneth.lee@netzero.net', '13051316760', '$argon2id$v=19$m=65536,t=3,p=4$BJxrxDwzkl/JwAry$Nzbi0hSQK/lb09rIFxUeuVaT5jpTFPWh', 1),
+(42, 'Michelle', 'Ramirez', 'michelle', 'michelleramirez@lycos.com', '14071324679', '$argon2id$v=19$m=65536,t=3,p=4$Ln/5drcFlCxvnNGd$cmyHc7E4nSmwfIp7/JoppZrDDs7YvcX1', 1),
+(43, 'Kevin', 'Perez', 'kevin', 'kperez@gmail.com', '14151332598', '$argon2id$v=19$m=65536,t=3,p=4$eYgURZEQ3PZgPsTF$2bUnxiP3zcCr1Y6ffeIIemGpb3EfKoNS', 0),
+(44, 'Carol', 'Lewis', 'carol', 'carol_lewis@yahoo.com', '15121340517', '$argon2id$v=19$m=65536,t=3,p=4$vphIk7s4pqL0KJFl$K6CXzU6M98NdFQCyXYbTuEPP+IKBLhcu', 1),
+(45, 'Brian', 'Thompson', 'brian_55', 'brian.thompson44@hotmail.com', '16171348436', '$argon2id$v=19$m=65536,t=3,p=4$iS4hX4TnCt1RTrzJ$m8Iq0na0p/Yt1JoW56KTLTYXPa/W4MxM', 1),
+(46, 'Amanda', 'Robinson', 'amanda', 'amanda.robinson@outlook.com', '17021356355', '$argon2id$v=19$m=65536,t=3,p=4$s3WDlQPFPA2bdgG/$MN33X7TfS5biDm0VZty1+Z4RlvUOUjNw', 1),
+(47, 'George', 'White', 'george', 'georgewhite@icloud.com', '17181364274', '$argon2id$v=19$m=65536,t=3,p=4$oLR1uLAy0xhnTf0b$aNaMYmbdzw/Isz0psundmjv+73hbPsET', 1),
+(48, 'Melissa', 'Walker', 'melissa', 'mwalker@aol.com', '13121372193', '$argon2id$v=19$m=65536,t=3,p=4$JveImiSy5XcgCYf4$gEFCfuwOa6M1G/iFXC0NZ+cFlwvTWxaL', 1),
+(49, 'Timothy', 'Harris', 'tim', 'timothy_harris@live.com', '12131380112', '$argon2id$v=19$m=65536,t=3,p=4$YUoQXQZip2SFXy7K$SE3eJdRtEqlzIq47EuVTBZWAM8AD5qH4', 1),
+(50, 'Deborah', 'Young', 'deborah', 'deborah.young49@msn.com', '14041388031', '$argon2id$v=19$m=65536,t=3,p=4$VFZBqplIXdsNbXlw$DPyniUMyiNlCKqZKTZ7qJwdUS0d7FZTm', 1),
+(51, 'Ronald', 'Sanchez', 'ronald', 'ronald.sanchez@comcast.net', '12061395950', '$argon2id$v=19$m=65536,t=3,p=4$xLoICfZfu3zMtWfN$wD/G3SaoKfgFoeOASl1YCJlS24R5gA2q', 1),
+(52, 'Stephanie', 'Allen', 'steph', 'stephanieallen@verizon.net', '12141403869', '$argon2id$v=19$m=65536,t=3,p=4$+yfHwuEHFhvTS0lz$Nrr+9EEa4rSMrsEQp2vt7ZAoLbU+AfhJ', 1),
+(53, 'Edward', 'Clark', 'edward', 'eclark@att.net', '13031411788', '$argon2id$v=19$m=65536,t=3,p=4$MzoN5ouP47ULvjfb$7+kQHn+3+yPbTlKGFkrddYsLVxvnNPWx', 1),
+(54, 'Rebecca', 'King', 'rebecca', 'rebecca_king@sbcglobal.net', '14801419707', '$argon2id$v=19$m=65536,t=3,p=4$TODVrVGEhfnZgB/2$/uMksDur4Zlf49yBVae2sKjh1Ri4bwvW', 1),
+(55, 'Jason', 'Ramirez', 'jason', 'jason.ramirez54@protonmail.com', '16021427626', '$argon2id$v=19$m=65536,t=3,p=4$La4Sz8kP62tZkhQM$1V9rMRdyC5ksV1UE4YHoDxzoCGmyG+D6', 1),
+(56, 'Sharon', 'Wright', '!!sharon!!', 'sharon.wright@gmx.com', '16461435545', '$argon2id$v=19$m=65536,t=3,p=4$Cok0j4ron6Yvy8lr$VhZEgVfbB6Mpr2lzoTvURbGpEVT+fTmT', 1),
+(57, 'Jeffrey', 'Lewis', 'jeffrey', 'jeffreylewis@mail.com', '17731443464', '$argon2id$v=19$m=65536,t=3,p=4$PoeFGTy5c4oc+ojH$xtLWsGI4bdRt+9eejxY8u5YDjUQBNqfB', 1),
+(58, 'Laura', 'Scott', 'laura', 'lscott@zoho.com', '18321451383', '$argon2id$v=19$m=65536,t=3,p=4$vU7Q7XTOaQ9QDcF6$fssIXIiHTremz2mUKEsjMRUFSZQhRP9V', 1),
+(59, 'Ryan', 'Robinson', 'ryan', 'ryan_robinson@fastmail.com', '19041459302', '$argon2id$v=19$m=65536,t=3,p=4$FEStrAa6Z5YMvisM$NGRjykwMT7T2i+OwJGcvIEcBgZ5zKmzE', 0),
+(60, 'Cynthia', 'Torres', 'cynthia', 'cynthia.torres59@earthlink.net', '16151467221', '$argon2id$v=19$m=65536,t=3,p=4$hqgkjRrayIbPdBPP$d+ZRwh1flQ/ZG7bdOOh1QulctAslTU2S', 1),
+(61, 'Jacob', 'Walker', 'jacob', 'jacob.walker@juno.com', '19011475140', '$argon2id$v=19$m=65536,t=3,p=4$tQDH9eN6JUJqGb8m$UtDZldrphAxHUtwudSF4/BSX6BPdnbiZ', 1),
+(62, 'Kathleen', 'Nguyen', 'kathleen', 'kathleennguyen@netzero.net', '12161483059', '$argon2id$v=19$m=65536,t=3,p=4$ShDW0WCdGcH3EDTA$P2JM/Bu9IrMKlQa+FuO5BgAUf4x3rMdo', 1),
+(63, 'Gary', 'Young', 'gary', 'gyoung@lycos.com', '14121490978', '$argon2id$v=19$m=65536,t=3,p=4$tbrMtTmv7Yl1RYQe$EzberD3ncgOiop+r2awCsoT/jSBCjIwb', 1),
+(64, 'Amy', 'Hill', 'amy', 'amy_hill@gmail.com', '15031498897', '$argon2id$v=19$m=65536,t=3,p=4$HIifzg0UIbPf6KQ0$IZ2O1XtXX0saEGWEzolegZP4O6a88RWE', 1),
+(65, 'Nicholas', 'Allen', 'nicholas', 'nicholas.allen64@yahoo.com', '16191506816', '$argon2id$v=19$m=65536,t=3,p=4$WTiYIPjCHH8S9Csi$UAvUEwt6wfPWU2p0tGWnUTM5lJYL5o59', 1),
+(66, 'Shirley', 'Flores', 'shirley', 'shirley.flores@hotmail.com', '12101514735', '$argon2id$v=19$m=65536,t=3,p=4$wtaqU+EVRWGczaHh$wNJPGEH4l/lzq2LVf4WUfL03GTEXqyVi', 0),
+(67, 'Eric', 'King', 'xX_eric66_Xx', 'ericking@outlook.com', '14691522654', '$argon2id$v=19$m=65536,t=3,p=4$AQjk5WY1/dn77318$wi4Y+rbDzZfLQX6plCjbn/lB6hzQ9h1r', 1),
+(68, 'Angela', 'Green', 'angela', 'agreen@icloud.com', '18131530573', '$argon2id$v=19$m=65536,t=3,p=4$0gsPQyaxJHlOXGMY$1gNMFW3GNzqgAV7+sURz6gObi0PeJC4L', 1),
+(69, 'Jonathan', 'Wright', 'jonathan', 'jonathan_wright@aol.com', '19411538492', '$argon2id$v=19$m=65536,t=3,p=4$zA6Z4AAhx3pgrj/x$bv/CLBusAm7mzlg1CG42thrfu5LDOtNH', 1),
+(70, 'Helen', 'Adams', 'helen', 'helen.adams69@live.com', '18501546411', '$argon2id$v=19$m=65536,t=3,p=4$PBtDYePWtLClz7tx$3QZoeTpAjL+Sc/lz+JMlzr8IDMemaSyt', 1),
+(71, 'Stephen', 'Scott', 'stephen', 'stephen.scott@msn.com', '17271554330', '$argon2id$v=19$m=65536,t=3,p=4$MgwQS59FQUwoMi6m$ouY7eefm0q1TjVuUvlQa9MtHmnEot/Ip', 1),
+(72, 'Anna', 'Nelson', 'anna', 'annanelson@comcast.net', '19411562249', '$argon2id$v=19$m=65536,t=3,p=4$P7FufGUzKZAqEEmb$ng+ADlvtHd2YoLpkBDFhFjRmfBwMRk7x', 1),
+(73, 'Larry', 'Torres', 'larry', 'ltorres@verizon.net', '15611570168', '$argon2id$v=19$m=65536,t=3,p=4$bO00elFsvtSrAzCQ$ia9e/QiizgU0lSu//rHMg7v3XMoiGDEz', 1),
+(74, 'Brenda', 'Baker', 'brenda', 'brenda_baker@att.net', '19541578087', '$argon2id$v=19$m=65536,t=3,p=4$6E/gYYRWZlDR2NaM$+co810M6sQBkTY7eLQlIx40EpBfWxXIQ', 2),
+(75, 'Justin', 'Nguyen', 'justin', 'justin.nguyen74@sbcglobal.net', '17861586006', '$argon2id$v=19$m=65536,t=3,p=4$tUvCSYN/OyuYbawn$F6GTmWrG1jQ4ILUNWh//UchpW5Nt6eP9', 1);
 
 -- Foreign-culture users Languages represented: Japanese, Chinese, Korean, Vietnamese, Hindi,
 -- Arabic, Hebrew, Yiddish, Russian, German, French, Spanish, Irish, Nigerian, Polish. 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(76, '隼人', '佐藤', 'h0ayato_75', 'hayato.sato@protonmail.com', '13211593925', '$2b$12$DwjU3ONZLGcILDQHmIKDk9.VhdI9LPZhPs7mcF7Ou3wo'),
-(77, 'Yuki', 'Tanaka', 'yuki', 'yukitanaka@gmx.com', '13521601844', '$argon2id$v=19$m=65536,t=3,p=4$JBXVsmFfLZq2$JBXVsmFfLZq2w6cHzRW9GWwR2TLjOMgJ'),
-(78, 'Wei', 'Chen', 'wei', 'wchen@mail.com', '13861609763', 'SHA1$+U4)pT}BK)9a$4V{Hd~Qk>dj;XD{$PRCsXI'),
-(79, 'Mei', 'Wang', 'mei', 'mei_wang@outlook.com', '12121617682', '$2b$12$UZBzvwWE/kBqXbR94Cs/Ht.bem1CmkWBxuwkTdV4AhQA'),
-(80, 'Jun', 'Li', 'jun', 'jun.li79@fastmail.com', '13051625601', '$argon2id$v=19$m=65536,t=3,p=4$6px0SFxRR65o$6px0SFxRR65oM4tiA8rTzkZRjno7kirV'),
-(81, '李', '伟', 'li', 'li.wei@earthlink.net', '14071633520', 'SHA1$!so?Zb%K1!Ah!sz!Gt$+t[e5~Qy{$Cc170g'),
-(82, 'Xiu', 'Huang', 'xiu', 'xiuhuang@live.com', '14151641439', '$2b$12$ccnGZZ20+fyLf4A9q4N4TL.pfpRsbx5cw49NqDqwgL5A'),
-(83, '张', '丽', 'zhang', 'zli@netzero.net', '15121649358', '$argon2id$v=19$m=65536,t=3,p=4$+KZOsUvUjYd0$+KZOsUvUjYd0kMDW+RtSTsScZC19GitI'),
-(84, '민준', '김', 'minjun', 'minjun_kim@lycos.com', '16171657277', 'SHA1$]3q>5h!3G#jk<iC|Sf{c4+wj|CV[$CtBxEE'),
-(85, 'Ji-woo', 'Park', 'xX_jiwoo84_Xx', 'jiwoo.park84@gmx.com', '17021665196', '$2b$12$aRqXeo4Y5uqRI00L94yrQf.dLskwO5i83jH4HWhVsIz4'),
-(86, 'Nguyễn', 'Văn An', 'nguyen', 'nguyen.vanan@yahoo.com', '17181673115', '$argon2id$v=19$m=65536,t=3,p=4$n81IA7He0FLb$n81IA7He0FLbXXZqXKu6KymoZ5dzZlIj'),
-(87, 'Trần', 'Thị Hoa', 'tran', 'tranthihoa@hotmail.com', '13121681034', 'SHA1$|lK-jl}P+/Pu?EV{Fx$9r@MU<Ql%$tPSIBE'),
-(88, 'Aarav', 'Sharma', 'aarav', 'asharma@fastmail.com', '12131688953', '$2b$12$uLBMG7xBa9cXhBTtWSFw6U.rCpQDXKdlhSLrIZ4aoqEs'),
-(89, 'Priya', 'Patel', 'priya', 'priya_patel@icloud.com', '14041696872', '$argon2id$v=19$m=65536,t=3,p=4$C0e51wYJYqCD$C0e51wYJYqCD/TUmffO/H5HQALPc/7W5'),
-(90, 'Rohan', 'Mehta', 'rohan', 'rohan.mehta89@aol.com', '12061704791', 'SHA1$%G+(CD:dy_kZ|DT)LB?kC@Z8&de#$qWrcXE'),
-(91, 'محمد', 'الفارسي', 'mohammed', 'mohammed.alfarsi@live.com', '12141712710', '$2b$12$RfQQMHcNA2yBG2HG7HkGWy.YE3E3RmwLEYmnkOclgGHc'),
-(92, 'Fatima', 'Hassan', 'fatima', 'fatimahassan@msn.com', '13031720629', '$argon2id$v=19$m=65536,t=3,p=4$DMg5pjVL6dY6$DMg5pjVL6dY68f4gy8fY7r86lgQrnS1+'),
-(93, 'נועה', 'כהן', 'noa', 'ncohen@comcast.net', '14801728548', 'SHA1$=U6&Bh]VX~8J%5C#oA!0N$R/[AB_$iX5o6A'),
-(94, 'Itai', 'Levi', 'i0tai_93', 'itai_levi@verizon.net', '16021736467', '$2b$12$Drs36BxvFmokBNi300OyZb.ZvBZ9qFQRpGlrLTsW2pAg'),
-(95, 'משה', 'כץ', 'moishe', 'moishe.katz94@att.net', '16461744386', '$argon2id$v=19$m=65536,t=3,p=4$aVtoV0huDCu9$aVtoV0huDCu9Jr6laIV+VbWVTVqokosq'),
-(96, 'Дмитрий', 'Иванов', 'dmitri', 'dmitri.ivanov@sbcglobal.net', '17731752305', 'SHA1$!Ht>mL:fY}wO@Wq!ac;PT(bq+aB&$r8k5Ng'),
-(97, 'Anastasia', 'Petrova', 'anastasia', 'anastasiapetrova@hotmail.com', '18321760224', '$2b$12$WzrJCpuoeHwzUqVIaMxbJg.Iy7Uji20dBnkTvlaYddGw'),
-(98, 'Hans', 'Müller', 'hans', 'hmuller@gmx.com', '19041768143', '$argon2id$v=19$m=65536,t=3,p=4$dvBp+YCgBN0h$dvBp+YCgBN0hULuG5SG14dLTsLHoYJka'),
-(99, 'Ingrid', 'Fischer', 'ingrid', 'ingrid_fischer@mail.com', '16151776062', 'SHA1$!td_2h/am_ZV>gP>Sp!us$9X:OL)$yLe/Rw'),
-(100, 'André', 'Dubois', 'andre', 'andre.dubois99@aol.com', '19011783981', '$2b$12$5c8EZagl5hBb42V3Z1A0cp.2/5TChocpZjUAgulHwXFs'),
-(101, 'José', 'Muñoz', 'jose', 'jose.munoz@fastmail.com', '12161791900', '$argon2id$v=19$m=65536,t=3,p=4$aNLjXQIS0GhZ$aNLjXQIS0GhZmmDNHCrdtOUx4JSOOWJA'),
-(102, 'Siobhán', 'O''Brien', 'siobhan', 'siobhanobrien@earthlink.net', '14121799819', 'SHA1$(J1}EU+fp@WD*UL>O6(FF>/g#kf<$RtDqZA'),
-(103, 'Chinedu', 'Okafor', 'xX_chinedu102_Xx', 'cokafor@juno.com', '15031807738', '$2b$12$J4xZyQrgSoa/tucCq/jDsC.w7w2IdHA58PPeCfHkNHHQ'),
-(104, 'Katarzyna', 'Kowalska', 'katarzyna', 'katarzyna_kowalska@netzero.net', '16191815657', '$argon2id$v=19$m=65536,t=3,p=4$qVwgduZvfjfQ$qVwgduZvfjfQbq9WYYKG5Yawh9/zWxS1');
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(76, '隼人', '佐藤', 'h0ayato_75', 'hayato.sato@protonmail.com', '13211593925', '$argon2id$v=19$m=65536,t=3,p=4$raIsyfYwJELd10kW$/UJPu/gSrzhuNvNgMXUxIN8zP4ZnHUYO', 1),
+(77, 'Yuki', 'Tanaka', 'yuki', 'yukitanaka@gmx.com', '13521601844', '$argon2id$v=19$m=65536,t=3,p=4$X8IoA50uOftJ80jJ$YUYKpH5bfNTUHFim0oNvwpZYRZY/RSxs', 2),
+(78, 'Wei', 'Chen', 'wei', 'wchen@mail.com', '13861609763', '$argon2id$v=19$m=65536,t=3,p=4$0KrBRi0iaE3ZBJqt$CEpKeWKqXJiIBCNmUkUcjpPBa6r5Jh5e', 1),
+(79, 'Mei', 'Wang', 'mei', 'mei_wang@outlook.com', '12121617682', '$argon2id$v=19$m=65536,t=3,p=4$f7o9CLRQDBAKdCwd$I2ViJloZX0ChVQGj9r366yRyoZvKyjc4', 1),
+(80, 'Jun', 'Li', 'jun', 'jun.li79@fastmail.com', '13051625601', '$argon2id$v=19$m=65536,t=3,p=4$zzHzLcciTA1bHTuO$TNnfwT1d6nRntU8+kRO8qnGXATGcyJ3X', 2),
+(81, '李', '伟', 'li', 'li.wei@earthlink.net', '14071633520', '$argon2id$v=19$m=65536,t=3,p=4$u3rrboBWdbl7fAjP$R7+AaFATWnmqz464ig8vZE88sp/WiEDa', 1),
+(82, 'Xiu', 'Huang', 'xiu', 'xiuhuang@live.com', '14151641439', '$argon2id$v=19$m=65536,t=3,p=4$YCeFmzae7gZECf0H$ft7c9nmxsuPnWajdkjgL6YaAdx6ApA2o', 1),
+(83, '张', '丽', 'zhang', 'zli@netzero.net', '15121649358', '$argon2id$v=19$m=65536,t=3,p=4$lTmlEmlVJMNLs/Qy$akjfoBX60Akchdr3hxL4GrGMSdPWmu4u', 1),
+(84, '민준', '김', 'minjun', 'minjun_kim@lycos.com', '16171657277', '$argon2id$v=19$m=65536,t=3,p=4$8PJFb0cRDTQaERku$neO2RUip6uBgF0lBBKbH3pw4vKYFRGdl', 1),
+(85, 'Ji-woo', 'Park', 'xX_jiwoo84_Xx', 'jiwoo.park84@gmx.com', '17021665196', '$argon2id$v=19$m=65536,t=3,p=4$AHsiiYMjiibjUjso$/J5wmGMY0w4m6RPAdXCnASQJbyjluNHx', 1),
+(86, 'Nguyễn', 'Văn An', 'nguyen', 'nguyen.vanan@yahoo.com', '17181673115', '$argon2id$v=19$m=65536,t=3,p=4$fs9mhXGlChiLbIqT$UwrVGVUvoFvKWdCyCXUE8HagmWVEKd84', 1),
+(87, 'Trần', 'Thị Hoa', 'tran', 'tranthihoa@hotmail.com', '13121681034', '$argon2id$v=19$m=65536,t=3,p=4$+oo6+lZp+9wD24hp$yiIU48ERhjC9BWoh3hEvOBmk9H76qj5O', 1),
+(88, 'Aarav', 'Sharma', 'aarav', 'asharma@fastmail.com', '12131688953', '$argon2id$v=19$m=65536,t=3,p=4$mAJUip89Gxbd8eD/$rUsXPfVxDc6k5BeK4ryMOziZdvbU9Di9', 1),
+(89, 'Priya', 'Patel', 'priya', 'priya_patel@icloud.com', '14041696872', '$argon2id$v=19$m=65536,t=3,p=4$V+BBy8zN6ICPe0wR$0cVuEatH68XrHEpJ1trrPhvD2vk50GCt', 1),
+(90, 'Rohan', 'Mehta', 'rohan', 'rohan.mehta89@aol.com', '12061704791', '$argon2id$v=19$m=65536,t=3,p=4$I0mg3ncLjKwr1jWM$o5F/Vy3jGWxGE0UGjh8BPb48Rx7PD3lA', 1),
+(91, 'محمد', 'الفارسي', 'mohammed', 'mohammed.alfarsi@live.com', '12141712710', '$argon2id$v=19$m=65536,t=3,p=4$0ZrDVUW/UqCBIoer$Z1j86QTS3Ow9cuYVoLAFzVMGui6fzb0I', 2),
+(92, 'Fatima', 'Hassan', 'fatima', 'fatimahassan@msn.com', '13031720629', '$argon2id$v=19$m=65536,t=3,p=4$diawkFawDwHEcdok$lzt8QjSOL19HQhkHuHligHqQR+sygt2X', 1),
+(93, 'נועה', 'כהן', 'noa', 'ncohen@comcast.net', '14801728548', '$argon2id$v=19$m=65536,t=3,p=4$LcDNj8mity57Dl83$rbyBn6EH2QhdDdCLB6yxANHquhC7RNYO', 1),
+(94, 'Itai', 'Levi', 'i0tai_93', 'itai_levi@verizon.net', '16021736467', '$argon2id$v=19$m=65536,t=3,p=4$NhOlLgPEtwF7dzPp$U8NjniX39iGC5O91V5Ogn6lJreqi7eMi', 1),
+(95, 'משה', 'כץ', 'moishe', 'moishe.katz94@att.net', '16461744386', '$argon2id$v=19$m=65536,t=3,p=4$R3ksYmgeKrnjOu0v$EwX2RUpF6olHX8CxK7Yzqy+nRFdG8tPO', 1),
+(96, 'Дмитрий', 'Иванов', 'dmitri', 'dmitri.ivanov@sbcglobal.net', '17731752305', '$argon2id$v=19$m=65536,t=3,p=4$wRy1haDSbGfePDOI$UMVTYWKoDb0FgvtNGPW3NrERhSwOrg6R', 1),
+(97, 'Anastasia', 'Petrova', 'anastasia', 'anastasiapetrova@hotmail.com', '18321760224', '$argon2id$v=19$m=65536,t=3,p=4$87BRUFimpPddDVji$/gz7ZN9WN8OSNTni951bDAAUUpe73dq2', 1),
+(98, 'Hans', 'Müller', 'hans', 'hmuller@gmx.com', '19041768143', '$argon2id$v=19$m=65536,t=3,p=4$lxLTmChCU3uWj1zP$MQx+bsWvxcoUghAcB7tBst4d2rHJD1B7', 1),
+(99, 'Ingrid', 'Fischer', 'ingrid', 'ingrid_fischer@mail.com', '16151776062', '$argon2id$v=19$m=65536,t=3,p=4$glaRvEGDwDwzo7BI$2g+a4li1sO6vBR0FzDu0T3MNuB5ksyOp', 0),
+(100, 'André', 'Dubois', 'andre', 'andre.dubois99@aol.com', '19011783981', '$argon2id$v=19$m=65536,t=3,p=4$Lx194+8J8z8svDjT$XiZmT2QTYt7af9TZ3MuasUZPCRuZxKor', 1),
+(101, 'José', 'Muñoz', 'jose', 'jose.munoz@fastmail.com', '12161791900', '$argon2id$v=19$m=65536,t=3,p=4$dP94/JUcSP9oQGXH$cVXiUbJQK/uWcjyAhrsNDCh3Hpnslt3y', 1),
+(102, 'Siobhán', 'O''Brien', 'siobhan', 'siobhanobrien@earthlink.net', '14121799819', '$argon2id$v=19$m=65536,t=3,p=4$f/X2lwqMekhupecP$vo7unxzTzUp3PY0G5D9dwvxtSh5e4b54', 1),
+(103, 'Chinedu', 'Okafor', 'xX_chinedu102_Xx', 'cokafor@juno.com', '15031807738', '$argon2id$v=19$m=65536,t=3,p=4$cRYsgs/wXuaaU1yW$0Q9uOWyIBaPOHRu+Jk+ft2k1L2alrnWJ', 1),
+(104, 'Katarzyna', 'Kowalska', 'katarzyna', 'katarzyna_kowalska@netzero.net', '16191815657', '$argon2id$v=19$m=65536,t=3,p=4$o34Gk5Vme/MBiHJV$A2J6OZ8pfsLgqTWFHe49dlkeB78kLRxr', 2);
 
 --  edge-case users
 -- Split into one INSERT per row on purpose: with 'mysql --force' an error on one row now only aborts that single statement
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(105, 'Amelia', 'Stone', 'amelia.stone', 'amelia.stone@gmail.com', '14158127100', '$2b$12$HoVHis6gNWryzdsq2chu8F.uCCCRpMNrRkpvpRdn8zS8');  -- dup-email-case A
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(105, 'Amelia', 'Stone', 'amelia.stone', 'amelia.stone@gmail.com', '14158127100', '$argon2id$v=19$m=65536,t=3,p=4$pxHRvuC8CGHhCuMi$X4Bm18OhXD79zHupOZvr88/IVm/QuRmV', 1);  -- dup-email-case A
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(107, 'Omar', 'Delacroix-Reyes', 'omar.d', 'omar.delacroix@outlook.com', '(407) 555-0199', 'SHA1$%li@NU;Fl*Zl>16}MI#cX#RO>sn-$juIiYI');  -- dup-phone-format A
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(107, 'Omar', 'Delacroix-Reyes', 'omar.d', 'omar.delacroix@outlook.com', '(407) 555-0199', '$argon2id$v=19$m=65536,t=3,p=4$Wor/KQXwOdOA6pK6$VU9zwUyyMLFi1bAjApEoKmyaIg2lJOb1', 1);  -- dup-phone-format A
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(108, 'Farid', 'Boone', 'farid.boone', 'farid.boone@zoho.com', '+1-407-555-0199', '$2b$12$h4guQMDiM2DAxA+kcHAJD7.Yk4o+v9PMdj5q4cYXeoP4');  -- dup-phone-format B (same number as above)
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(108, 'Farid', 'Boone', 'farid.boone', 'farid.boone@zoho.com', '+1-407-555-0199', '$argon2id$v=19$m=65536,t=3,p=4$SxbzwCnApIPXZdi2$oIs2Ucdg2XuVUrTVGsuuttopuNm/07bh', 1);  -- dup-phone-format B (same number as above)
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(109, '  Grace', 'Holloway  ', ' gws', ' grace.holloway@yahoo.com ', '16178142938', '$argon2id$v=19$m=65536,t=3,p=4$MB8bh3uAymUt$MB8bh3uAymUtU0Nz3c8cyFdMp8HUgpyF');  -- whitespace in name/username/email
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(109, '  Grace', 'Holloway  ', ' gws', ' grace.holloway@yahoo.com ', '16178142938', '$argon2id$v=19$m=65536,t=3,p=4$E2rEaETEl9X2Q8fC$g5EexziHkQlRk2Nj5FtwN3Pn2vf/puhK', 1);  -- whitespace in name/username/email
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(110, 'Bo', 'Xu', 'bo.xu', 'bo.xu@qq.com', '17028150857', 'SHA1$!FX{Xv|8Y_V9)Dw=v8:Dd+6q_vK;$w8ofvc');  -- very short name
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(110, 'Bo', 'Xu', 'bo.xu', 'bo.xu@qq.com', '17028150857', '$argon2id$v=19$m=65536,t=3,p=4$fQgnyZvDA3H6lE7a$CYmz0lKUQFIQCeZ13itkjhyHmW+Gym/5', 1);  -- very short name
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(111, 'Al', 'O', 'al.o', 'al.o@gmail.com', '17188158776', '$2b$12$trQ3essDmJkAPYHKWXnDx9.r1ZoFZFoWcVnOQ4UMxQYM');  -- very short name (1-char surname)
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(111, 'Al', 'O', 'al.o', 'al.o@gmail.com', '17188158776', '$argon2id$v=19$m=65536,t=3,p=4$Li8qsi93qdxfjoPE$gCISvU0Ju44waql3EtHooWlCatfTkNO4', 1);  -- very short name (1-char surname)
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(112, 'Bartholomew', 'Montgomery-Fitzgerald-Worthington-Ashcroft-Pemberton-Radcliffe-Beaumont-Thornbury-Winterbourne-Castellane-Hollingsworth-Abernathy-Featherstonehaugh-Ravensworth-Chetwynd-Devereux-Montgomery-Fitzgerald-Worthington-Ashcroft-Pemberton-Radcliffe-Beaumont-', 'bartholomew.long', 'bartholomew.long@protonmail.com', '13128166695', '$argon2id$v=19$m=65536,t=3,p=4$ia00X4IC2vNM$ia00X4IC2vNMdtKICPWmPCcVRthxFmgn');  -- long lastName, 250 chars (limit 255)
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(112, 'Bartholomew', 'Montgomery-Fitzgerald-Worthington-Ashcroft-Pemberton-Radcliffe-Beaumont-Thornbury-Winterbourne-Castellane-Hollingsworth-Abernathy-Featherstonehaugh-Ravensworth-Chetwynd-Devereux-Montgomery-Fitzgerald-Worthington-Ashcroft-Pemberton-Radcliffe-Beaumont-', 'bartholomew.long', 'bartholomew.long@protonmail.com', '13128166695', '$argon2id$v=19$m=65536,t=3,p=4$zNA9RqVTCJqc13xf$LJp5V8FWLLZeG9PB5TN6UlUAD3GUcIhR', 1);  -- long lastName, 250 chars (limit 255)
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(113, 'Declan', 'O''Connor', 'declan.oconnor', 'declan.oconnor@aol.com', '12138174614', 'SHA1$;a1~Z1|9l*aS@cb/T2<Cg]Wb&Qm:$KO14CM');  -- apostrophe surname
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(113, 'Declan', 'O''Connor', 'declan.oconnor', 'declan.oconnor@aol.com', '12138174614', '$argon2id$v=19$m=65536,t=3,p=4$U0e3NDRR8nx+nVzI$+fqR14K1tOtxuTJhFQewg22ytVpoI4YG', 1);  -- apostrophe surname
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(114, 'Ava', 'Smith-Jones', 'ava.smithjones', 'ava.smith-jones@icloud.com', '14048182533', '$2b$12$1qgmTXFxisN9LK1wUwvvEY.MNa/O1hwBe+U48Kx4x5ww');  -- hyphenated surname
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(114, 'Ava', 'Smith-Jones', 'ava.smithjones', 'ava.smith-jones@icloud.com', '14048182533', '$argon2id$v=19$m=65536,t=3,p=4$cYXxWbVoPQqeyAcD$LmzED8PpePl6pEB4N1UbDoQZE2FQEWeM', 1);  -- hyphenated surname
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(115, 'Freya', 'Andersen', 'freya.andersen', 'freya.andersen@gmx.com', '+44 20 7946 0958', '$argon2id$v=19$m=65536,t=3,p=4$1zqmFlX5oZ85$1zqmFlX5oZ85ZRVp3VXlea0psGsWIsfD');  -- international phone, raw UK format
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(115, 'Freya', 'Andersen', 'freya.andersen', 'freya.andersen@gmx.com', '+44 20 7946 0958', '$argon2id$v=19$m=65536,t=3,p=4$I897bgW7Dw8XunH4$lN7BaillxVa306LSVvm/oVLACXTQJKkV', 1);  -- international phone, raw UK format
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(116, 'Arjun', 'Rao', 'arjun.rao', 'arjun.rao@rediffmail.com', '+91 98765 43210', 'SHA1${k9*Ve!Q6*Fk$aD&a1]D8^1d?9a[$GP4V2Q');  -- international phone, raw India format
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(116, 'Arjun', 'Rao', 'arjun.rao', 'arjun.rao@rediffmail.com', '+91 98765 43210', '$argon2id$v=19$m=65536,t=3,p=4$oUPrQoRu1cUCZauz$5UZHDw6vVhdWCPZf/8zwiwxHrvOLr9or', 1);  -- international phone, raw India format
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(117, 'Lin', 'Fang', 'lin.fang', 'lin.fang@163.com', '+86 138 0013 8000', '$2b$12$938IZiuCTa465KP5GZEme0.Gw65Phx275S2q8MIQSD28');  -- international phone, raw China format
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(117, 'Lin', 'Fang', 'lin.fang', 'lin.fang@163.com', '+86 138 0013 8000', '$argon2id$v=19$m=65536,t=3,p=4$JNMzC4OqU/5vhnke$sIiwccD4l6ExzORdqRVijcpguLJMlA4J', 1);  -- international phone, raw China format
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(118, 'Isla', 'Brennan', 'isla.brennan', 'isla.brennan@fastmail.com', NULL, '$argon2id$v=19$m=65536,t=3,p=4$wV4dnnInTLpC$wV4dnnInTLpCuJihitt35TnUPDpg4+/C');  -- NULL phone number
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(118, 'Isla', 'Brennan', 'isla.brennan', 'isla.brennan@fastmail.com', NULL, '$argon2id$v=19$m=65536,t=3,p=4$ahKDNl9sW7W6zCJI$FrNYfCmB4V7S+dTZAuS/Zut2x8AzFTmH', 1);  -- NULL phone number
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(119, 'Tobias', 'Kern', 'tobias.kern', 'tobias.kern@web.de', '', 'SHA1$*+t[Dl#qh$ue]f2/KX/mg]Yu;h0!$DerSIM');  -- empty-string phone number
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(119, 'Tobias', 'Kern', 'tobias.kern', 'tobias.kern@web.de', '', '$argon2id$v=19$m=65536,t=3,p=4$JSp9KWBO3aMGrqvL$m3733ymt0wtOC3XJtmxyu8y4+mcz4en3', 1);  -- empty-string phone number
 
-INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`) VALUES
-(120, 'Trinity', 'Vance', 'xX_Tr1n1ty_Xx99', 'trinity.vance@lycos.com', '12068190452', '!!!$2b$12$zEXklumDpSgkkm84hF6LZD.ZH4AcSxuoALAE+t/RCtiM~~~');  -- strange username + extra-obscure password chars
+INSERT INTO `Users` (`id`, `firstName`, `lastName`, `userName`, `email`, `phoneNumber`, `password`, `role`) VALUES
+(120, 'Trinity', 'Vance', 'xX_Tr1n1ty_Xx99', 'trinity.vance@lycos.com', '12068190452', '$argon2id$v=19$m=65536,t=3,p=4$Zj8pQ0nR2vLxK7mS$Ft6HqRxKtL3pXpZ8mBWtQ0Yd/NaK9V6c', 1);  -- strange username + extra-obscure password chars
 
 -- CONTACTS
 
@@ -950,30 +952,36 @@ DELIMITER $$
 
 CREATE PROCEDURE GetRecommendations(IN targetUserId INT)
 BEGIN
-    SELECT
-        candidate.email,
-        candidate.firstName,
-        candidate.lastName,
-        COUNT(DISTINCT myConnection.id) AS mutualCount
+    SELECT STRAIGHT_JOIN
+    candidate.email, candidate.firstName, candidate.lastName,
+    COUNT(DISTINCT matches.connectionId) AS mutualCount
+FROM (
+    SELECT myConnection.id AS connectionId
     FROM Contacts mySavedContact
-    JOIN Users myConnection
-        ON myConnection.email = mySavedContact.email
-        OR myConnection.phoneNumber = mySavedContact.phoneNumber
-    JOIN Contacts candidate
-        ON candidate.userID = myConnection.id
-    LEFT JOIN Contacts alreadySaved
-        ON alreadySaved.userID = targetUserId
-       AND (alreadySaved.email = candidate.email
-            OR alreadySaved.phoneNumber = candidate.phoneNumber)
+    JOIN Users myConnection ON myConnection.email = mySavedContact.email
     WHERE mySavedContact.userID = targetUserId
-      AND myConnection.id <> targetUserId
-      AND candidate.email <> (SELECT email FROM Users WHERE id = targetUserId)
-      AND alreadySaved.id IS NULL
-    GROUP BY candidate.email, candidate.firstName, candidate.lastName
-    ORDER BY mutualCount DESC
-    LIMIT 20;
+    UNION
+    SELECT myConnection.id AS connectionId
+    FROM Contacts mySavedContact
+    JOIN Users myConnection ON myConnection.phoneNumber = mySavedContact.phoneNumber
+    WHERE mySavedContact.userID = targetUserId
+) AS matches
+JOIN Contacts candidate ON candidate.userID = matches.connectionId
+WHERE matches.connectionId <> targetUserId
+  AND candidate.email <> (SELECT email FROM Users WHERE id = targetUserId)
+  AND NOT EXISTS (
+      SELECT 1 FROM Contacts alreadySavedEmail
+      WHERE alreadySavedEmail.userID = targetUserId AND alreadySavedEmail.email = candidate.email
+  )
+  AND NOT EXISTS (
+      SELECT 1 FROM Contacts alreadySavedPhone
+      WHERE alreadySavedPhone.userID = targetUserId AND alreadySavedPhone.phoneNumber = candidate.phoneNumber
+  )
+GROUP BY candidate.email, candidate.firstName, candidate.lastName
+ORDER BY mutualCount DESC
+LIMIT 20;
 END$$
- 
+
 DELIMITER ;
 
 COMMIT;
