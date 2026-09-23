@@ -28,7 +28,7 @@ if (
     exit;
 }
 
-$userName = trim($data['login']);
+$login = trim($data['login']);
 $password = $data['password'];
 
 // Make sure the fields aren't empty
