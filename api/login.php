@@ -16,23 +16,23 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Read the JSON request body
 $data = json_decode(file_get_contents('php://input'), true);
 
-// Check that username and password were provided
+// Check that login and password were provided
 if (
-    !isset($data['userName']) ||
+    !isset($data['login']) ||
     !isset($data['password'])
 ) {
     http_response_code(400);
     echo json_encode([
-        'error' => 'Username and password are required'
+        'error' => 'Login and password are required'
     ]);
     exit;
 }
 
-$userName = trim($data['userName']);
+$userName = trim($data['login']);
 $password = $data['password'];
 
 // Make sure the fields aren't empty
-if ($userName === '' || $password === '') {
+if ($login === '' || $password === '') {
     http_response_code(400);
     echo json_encode([
         'error' => 'Username and password are required'
@@ -40,19 +40,19 @@ if ($userName === '' || $password === '') {
     exit;
 }
 
-// Find the user by username
+// Find the user by username or email
 $stmt = $conn->prepare(
-    'SELECT id, firstName, lastName, userName, password, dateCreated, dateUpdated
-     FROM Users
-     WHERE userName = ?'
+    'SELECT id, firstName, lastName, userName, email, phoneNumber, password, dateCreated, dateUpdated
+    FROM Users
+    WHERE userName = ? OR email = ?'
 );
 
-$stmt->bind_param('s', $userName);
+$stmt->bind_param('ss', $login, $login);
 $stmt->execute();
 
 $result = $stmt->get_result();
 
-// Check whether the username exists
+// Check whether the user exists
 if ($result->num_rows === 0) {
     http_response_code(401);
     echo json_encode([
