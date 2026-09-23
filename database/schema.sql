@@ -952,30 +952,36 @@ DELIMITER $$
 
 CREATE PROCEDURE GetRecommendations(IN targetUserId INT)
 BEGIN
-    SELECT
-        candidate.email,
-        candidate.firstName,
-        candidate.lastName,
-        COUNT(DISTINCT myConnection.id) AS mutualCount
+    SELECT STRAIGHT_JOIN
+    candidate.email, candidate.firstName, candidate.lastName,
+    COUNT(DISTINCT matches.connectionId) AS mutualCount
+FROM (
+    SELECT myConnection.id AS connectionId
     FROM Contacts mySavedContact
-    JOIN Users myConnection
-        ON myConnection.email = mySavedContact.email
-        OR myConnection.phoneNumber = mySavedContact.phoneNumber
-    JOIN Contacts candidate
-        ON candidate.userID = myConnection.id
-    LEFT JOIN Contacts alreadySaved
-        ON alreadySaved.userID = targetUserId
-       AND (alreadySaved.email = candidate.email
-            OR alreadySaved.phoneNumber = candidate.phoneNumber)
+    JOIN Users myConnection ON myConnection.email = mySavedContact.email
     WHERE mySavedContact.userID = targetUserId
-      AND myConnection.id <> targetUserId
-      AND candidate.email <> (SELECT email FROM Users WHERE id = targetUserId)
-      AND alreadySaved.id IS NULL
-    GROUP BY candidate.email, candidate.firstName, candidate.lastName
-    ORDER BY mutualCount DESC
-    LIMIT 20;
+    UNION
+    SELECT myConnection.id AS connectionId
+    FROM Contacts mySavedContact
+    JOIN Users myConnection ON myConnection.phoneNumber = mySavedContact.phoneNumber
+    WHERE mySavedContact.userID = targetUserId
+) AS matches
+JOIN Contacts candidate ON candidate.userID = matches.connectionId
+WHERE matches.connectionId <> targetUserId
+  AND candidate.email <> (SELECT email FROM Users WHERE id = targetUserId)
+  AND NOT EXISTS (
+      SELECT 1 FROM Contacts alreadySavedEmail
+      WHERE alreadySavedEmail.userID = targetUserId AND alreadySavedEmail.email = candidate.email
+  )
+  AND NOT EXISTS (
+      SELECT 1 FROM Contacts alreadySavedPhone
+      WHERE alreadySavedPhone.userID = targetUserId AND alreadySavedPhone.phoneNumber = candidate.phoneNumber
+  )
+GROUP BY candidate.email, candidate.firstName, candidate.lastName
+ORDER BY mutualCount DESC
+LIMIT 20;
 END$$
- 
+
 DELIMITER ;
 
 COMMIT;
