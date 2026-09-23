@@ -81,12 +81,12 @@ $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
 // Create the new user
 $stmt = $conn->prepare(
-    'INSERT INTO Users (firstName, lastName, userName, password)
+    'INSERT INTO Users (firstName, lastName, userName, email, phoneNumber, password)
      VALUES (?, ?, ?, ?, ?, ?)'
 );
 
 $stmt->bind_param(
-    'ssss',
+    'ssssss',
     $firstName,
     $lastName,
     $userName,
