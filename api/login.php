@@ -42,7 +42,7 @@ if ($login === '' || $password === '') {
 
 // Find the user by username or email
 $stmt = $conn->prepare(
-    'SELECT id, firstName, lastName, userName, email, phoneNumber, password, dateCreated, dateUpdated
+    'SELECT id, firstName, lastName, userName, email, phoneNumber, password, dateCreated, dateUpdated, role
     FROM Users
     WHERE userName = ? OR email = ?'
 );
