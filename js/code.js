@@ -1,6 +1,7 @@
 const apiHost = (typeof window !== 'undefined' && window.location && (
   window.location.hostname === 'localhost' || 
   window.location.hostname === '127.0.0.1' || 
+  window.location.hostname.includes('lampjanke') ||
   window.location.hostname.includes('contactlyapp.online')
 ))
   ? '/api'
@@ -27,13 +28,12 @@ let userRole = 1; // Default to normal user (1)
 let step1Username = "";
 let step1Password = "";
 
-// Initialized with realistic dummy contacts for local front-end testing
-let allContacts = [
-  { id: 101, firstName: "Jake", lastName: "Londoner", email: "jake.Londoner@cyber.io", phoneNumber: "407-555-0199" },
-  { id: 102, firstName: "Michelle", lastName: "Smith", email: "michelleSmith@example.com", phoneNumber: "407-555-0123" },
-  { id: 103, firstName: "Hungry", lastName: "Hippo", email: "HHippo@ucf.edu", phoneNumber: "321-457-0144" },
-  { id: 104, firstName: "Icecream", lastName: "Mike", email: "MikeAndIkes@truck.org", phoneNumber: "407-980-0188" }
-];
+// Start with empty contacts list or load saved contacts from localStorage (v3 key guarantees a clean start)
+let allContacts = JSON.parse(localStorage.getItem('userContacts_v3')) || [];
+
+function saveContactsToStorage() {
+  localStorage.setItem('userContacts_v3', JSON.stringify(allContacts));
+}
 
 // Initialized with suggested mutual contacts for local front-end testing
 let mutualContacts = [
@@ -531,6 +531,7 @@ function saveNewContact() {
   };
 
   allContacts.push(newContact);
+  saveContactsToStorage();
 
   const modalEl = document.getElementById('addContactModal');
   const modal = bootstrap.Modal.getInstance(modalEl);
@@ -699,6 +700,7 @@ function saveContactEdits() {
     contact.lastName = lastNameInput;
     contact.email = emailInput;
     contact.phoneNumber = formattedPhone || phoneInput;
+    saveContactsToStorage();
   }
 
   const modalEl = document.getElementById('viewContactModal');
@@ -720,6 +722,7 @@ function confirmDeleteContact() {
   const idToDelete = parseInt(document.getElementById("deleteContactId").value);
 
   allContacts = allContacts.filter(c => c.id !== idToDelete);
+  saveContactsToStorage();
 
   const modalEl = document.getElementById('deleteConfirmModal');
   const modal = bootstrap.Modal.getInstance(modalEl);
@@ -951,6 +954,7 @@ function confirmAddMutualContact() {
     email: target.email,
     phoneNumber: target.phone
   });
+  saveContactsToStorage();
 
   mutualContacts = mutualContacts.filter(m => m.id !== mutualId);
 
