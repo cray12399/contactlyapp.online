@@ -22,7 +22,6 @@ if (
     !isset($data['lastName']) ||
     !isset($data['userName']) ||
     !isset($data['email']) ||
-    !isset($data['phoneNumber']) ||
     !isset($data['password'])
 ) {
     http_response_code(400);
@@ -37,39 +36,47 @@ $firstName = trim($data['firstName']);
 $lastName = trim($data['lastName']);
 $userName = trim($data['userName']);
 $email = trim($data['email']);
-$phoneNumber = trim($data['phoneNumber']);
+$phoneNumber = isset($data['phoneNumber']) ? trim($data['phoneNumber']) : '';
 $password = $data['password'];
 
-// Make sure none of the fields are empty
+// Make sure required fields are not empty
 if (
     $firstName === '' ||
     $lastName === '' ||
     $userName === '' ||
     $email === '' ||
-    $phoneNumber === '' ||
     $password === ''
 ) {
     http_response_code(400);
     echo json_encode([
-        'error' => 'All fields are required'
+        'error' => 'All required fields must be filled'
     ]);
     exit;
 }
 
-// Check whether the username already exists
+// Check whether the username or email already exists
 $stmt = $conn->prepare(
-    'SELECT id FROM Users WHERE userName = ?'
+    'SELECT userName, email FROM Users WHERE userName = ? OR email = ?'
 );
 
-$stmt->bind_param('s', $userName);
+$stmt->bind_param('ss', $userName, $email);
 $stmt->execute();
 
 $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
+    $existingUser = $result->fetch_assoc();
+    $errorMessage = 'Username or email already exists';
+
+    if (strcasecmp($existingUser['userName'], $userName) === 0) {
+        $errorMessage = 'Username already exists';
+    } else if (strcasecmp($existingUser['email'], $email) === 0) {
+        $errorMessage = 'Email already exists';
+    }
+
     http_response_code(409);
     echo json_encode([
-        'error' => 'Username already exists'
+        'error' => $errorMessage
     ]);
     $stmt->close();
     $conn->close();
