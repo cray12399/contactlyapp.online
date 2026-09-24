@@ -28,7 +28,7 @@ if (
     exit;
 }
 
-$userName = trim($data['login']);
+$login = trim($data['login']);
 $password = $data['password'];
 
 // Make sure the fields aren't empty
@@ -42,7 +42,7 @@ if ($login === '' || $password === '') {
 
 // Find the user by username or email
 $stmt = $conn->prepare(
-    'SELECT id, firstName, lastName, userName, email, phoneNumber, password, dateCreated, dateUpdated
+    'SELECT id, firstName, lastName, userName, email, phoneNumber, password, dateCreated, dateUpdated, role
     FROM Users
     WHERE userName = ? OR email = ?'
 );
