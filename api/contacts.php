@@ -127,12 +127,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (
         $firstName === '' ||
         $lastName === '' ||
-        $email === '' ||
-        $phoneNumber === ''
+        ($email === '' && $phoneNumber === '')
     ) {
         http_response_code(400);
         echo json_encode([
-            'error' => 'All fields are required'
+            'error' => 'First name, last name, and at least email or phone number are required'
         ]);
         $conn->close();
         exit;
@@ -206,12 +205,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     if (
         $firstName === '' ||
         $lastName === '' ||
-        $email === '' ||
-        $phoneNumber === ''
+        ($email === '' && $phoneNumber === '')
     ) {
         http_response_code(400);
         echo json_encode([
-            'error' => 'All fields are required'
+            'error' => 'First name, last name, and at least email or phone number are required'
         ]);
         $conn->close();
         exit;

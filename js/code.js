@@ -7,14 +7,13 @@ const apiHost = (typeof window !== 'undefined' && window.location && (
   ? '/api'
   : 'https://contactlyapp.online/api';
 
+// Unified endpoints based on API files
 const loginUrlBase = `${apiHost}/login.php`;
 const registerUrlBase = `${apiHost}/register.php`;
 const checkUsernameUrlBase = `${apiHost}/checkUsername.php`;
 const updateProfileUrlBase = `${apiHost}/updateProfile.php`;
-const searchContactsUrlBase = `${apiHost}/contacts.php`;
-const addContactUrlBase = `${apiHost}/addContact.php`;
-const updateContactUrlBase = `${apiHost}/updateContact.php`;
-const deleteContactUrlBase = `${apiHost}/deleteContact.php`;
+const contactsUrlBase = `${apiHost}/contacts.php`;
+const getMutualContactsUrlBase = `${apiHost}/suggested.php`;
 
 let userId = 0;
 let firstName = "";
@@ -28,18 +27,11 @@ let userRole = 1; // Default to normal user (1)
 let step1Username = "";
 let step1Password = "";
 
-// Start with empty contacts list or load saved contacts from localStorage (v3 key guarantees a clean start)
-let allContacts = JSON.parse(localStorage.getItem('userContacts_v3')) || [];
+// Global contacts list in memory (populated via backend API)
+let allContacts = [];
 
-function saveContactsToStorage() {
-  localStorage.setItem('userContacts_v3', JSON.stringify(allContacts));
-}
-
-// Initialized with suggested mutual contacts for local front-end testing
-let mutualContacts = [
-  { id: 201, name: "Taylor Swift", firstName: "Taylor", lastName: "Swift", email: "tSwift@fake.com", phone: "123-567-0177", mutualsCount: 4 },
-  { id: 202, name: "Famous Person2", firstName: "Famous", lastName: "Person2", email: "lol@notFamous.org", phone: "321-999-0166", mutualsCount: 2 }
-];
+// Initialized with empty mutual contacts array to be populated by backend API
+let mutualContacts = [];
 
 // Helper to toggle password input visibility
 function togglePasswordVisibility(inputId, iconId) {
@@ -189,11 +181,16 @@ function doSignUp() {
     isValid = false;
   }
 
-  const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4}$/;
-  if (phone !== "" && !phoneRegex.test(phone)) {
-    const phoneError = document.getElementById('phoneError');
-    if (phoneError) phoneError.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Invalid phone number format (123-456-7890)";
-    isValid = false;
+  let formattedPhone = "";
+  const digitsOnly = phone.replace(/\D/g, "");
+  if (phone !== "") {
+    if (digitsOnly.length < 10 || digitsOnly.length > 11) {
+      const phoneError = document.getElementById('phoneError');
+      if (phoneError) phoneError.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Invalid phone number format (10 or 11 digits required)";
+      isValid = false;
+    } else {
+      formattedPhone = formatPhoneNumber(digitsOnly);
+    }
   }
 
   if (!isValid) return;
@@ -204,8 +201,7 @@ function doSignUp() {
     userName: step1Username,
     password: step1Password,
     email: email,
-    phoneNumber: phone,
-    phone: phone
+    phoneNumber: formattedPhone || phone
   });
 
   let xhr = new XMLHttpRequest();
@@ -222,8 +218,7 @@ function doSignUp() {
             let jsonObject = JSON.parse(xhr.responseText);
             let errText = (jsonObject.error || "").toLowerCase();
 
-            // Check for duplicate email error first so it displays on Step 2
-            if (errText.includes("email") || errText.includes("duplicate") || errText.includes("already exists")) {
+            if (errText.includes("email")) {
               const emailError = document.getElementById('emailError');
               if (emailError) emailError.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Email already in use";
             } else if (errText.includes("username")) {
@@ -300,7 +295,7 @@ function doLogin() {
             let jsonObject = JSON.parse(xhr.responseText);
             let userObj = jsonObject.user || jsonObject;
 
-            userId = userObj.id || userObj.userID || 0;
+            userId = userObj.id || 0;
 
             if (userId < 1) {
               if (loginResult) {
@@ -313,7 +308,7 @@ function doLogin() {
             lastName = userObj.lastName || "";
             userName = userObj.userName || login;
             userEmail = userObj.email || "";
-            userPhone = userObj.phoneNumber || userObj.phone || "";
+            userPhone = userObj.phoneNumber ? formatPhoneNumber(userObj.phoneNumber) : "";
             userRole = userObj.role !== undefined ? parseInt(userObj.role) : 1;
 
             if (userRole === 0) {
@@ -407,7 +402,7 @@ function readCookie() {
   }
 
   if (userId < 0 || isNaN(userId)) {
-    window.location.href = "landing.html";
+    window.location.href = "index.html";
   } else if (userRole === 2 && !window.location.pathname.endsWith("admin.html")) {
     window.location.href = "admin.html";
   } else {
@@ -427,21 +422,27 @@ function readCookie() {
     if (dropdownEmail) dropdownEmail.innerText = userEmail || "Not provided";
 
     const dropdownPhone = document.getElementById("dropdownPhone");
-    if (dropdownPhone) dropdownPhone.innerText = userPhone || "Not provided";
+    if (dropdownPhone) dropdownPhone.innerText = userPhone ? formatPhoneNumber(userPhone) : "Not provided";
 
-    fetchContacts();
-    loadMutualContacts();
+    if (document.getElementById("contactList")) {
+      fetchContacts();
+    }
+    if (document.getElementById("mutualContactsList")) {
+      loadMutualContacts();
+    }
   }
 }
 
-// Helper: Formats phone numbers to 123-456-7890 if valid 10 digits
+// Helper: Formats phone numbers to 10 or 11 digits
 function formatPhoneNumber(phoneStr) {
   if (!phoneStr) return "";
   const digits = phoneStr.replace(/\D/g, "");
-  if (digits.length !== 10) {
-    return null;
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  } else if (digits.length === 11) {
+    return `+${digits.slice(0, 1)} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
   }
-  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  return phoneStr.trim();
 }
 
 // Helper: Resets inline error messages for contact modals
@@ -458,14 +459,41 @@ function clearContactErrors(prefix) {
   });
 }
 
-function fetchContacts() {
-  const searchInput = document.getElementById("searchText");
-  const query = searchInput ? searchInput.value.trim() : "";
+// API Integration: Fetch contacts from contacts.php using GET with search query & userID
+async function fetchContacts() {
+  if (!userId || userId <= 0) return;
 
-  if (query === "") {
-    renderContacts(allContacts);
-  } else {
-    filterContacts();
+  const searchInput = document.getElementById("searchText");
+  const searchVal = searchInput ? searchInput.value.trim() : "";
+
+  try {
+    let url = `${contactsUrlBase}?userID=${userId}`;
+    if (searchVal !== "") {
+      url += `&search=${encodeURIComponent(searchVal)}`;
+    }
+
+    const response = await fetch(url, { method: 'GET' });
+
+    if (response.ok) {
+      const data = await response.json();
+      const results = data.contacts || [];
+      
+      allContacts = results.map(item => ({
+        id: item.id,
+        firstName: item.firstName || '',
+        lastName: item.lastName || '',
+        email: item.email || '',
+        phoneNumber: item.phoneNumber || ''
+      }));
+
+      renderContacts(allContacts);
+    } else {
+      allContacts = [];
+      renderContacts([]);
+    }
+  } catch (err) {
+    allContacts = [];
+    renderContacts([]);
   }
 }
 
@@ -481,7 +509,8 @@ function openAddContactModal() {
   modal.show();
 }
 
-function saveNewContact() {
+// API Integration: Send newly added contact to contacts.php via POST
+async function saveNewContact() {
   clearContactErrors('add');
 
   const firstNameInput = document.getElementById("addFirstName").value.trim();
@@ -512,32 +541,54 @@ function saveNewContact() {
 
   let formattedPhone = "";
   if (phoneInput !== "") {
-    formattedPhone = formatPhoneNumber(phoneInput);
-    if (!formattedPhone) {
+    const digitsOnly = phoneInput.replace(/\D/g, "");
+    if (digitsOnly.length < 10 || digitsOnly.length > 11) {
       const el = document.getElementById("addPhoneError");
-      if (el) el.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Invalid phone number format (123-456-7890)";
+      if (el) el.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Invalid phone number format (10 or 11 digits required)";
       isValid = false;
+    } else {
+      formattedPhone = formatPhoneNumber(digitsOnly);
     }
+  }
+
+  if (emailInput === "" && phoneInput === "") {
+    const el = document.getElementById("addPhoneError");
+    if (el) el.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Phone number or email required";
+    isValid = false;
   }
 
   if (!isValid) return;
 
-  const newContact = {
-    id: Date.now(),
+  const payload = {
+    userID: userId,
     firstName: firstNameInput,
     lastName: lastNameInput,
     email: emailInput,
     phoneNumber: formattedPhone || phoneInput
   };
 
-  allContacts.push(newContact);
-  saveContactsToStorage();
+  try {
+    const response = await fetch(contactsUrlBase, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  const modalEl = document.getElementById('addContactModal');
-  const modal = bootstrap.Modal.getInstance(modalEl);
-  if (modal) modal.hide();
+    if (response.ok) {
+      const modalEl = document.getElementById('addContactModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
 
-  fetchContacts();
+      fetchContacts();
+    } else {
+      const data = await response.json().catch(() => ({}));
+      const el = document.getElementById("addPhoneError");
+      if (el) el.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> " + (data.error || "Failed to add contact");
+    }
+  } catch (err) {
+    const el = document.getElementById("addPhoneError");
+    if (el) el.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> " + err.message;
+  }
 }
 
 function filterContacts() {
@@ -550,7 +601,7 @@ function filterContacts() {
     const fullName = `${fName} ${lName}`.trim();
 
     const email = (contact.email || '').toLowerCase();
-    const phone = (contact.phoneNumber || contact.phone || '').toLowerCase();
+    const phone = (contact.phoneNumber || '').toLowerCase();
 
     return !query || 
            fName.includes(query) || 
@@ -604,7 +655,7 @@ function renderContacts(contactsArray) {
 
   let html = "";
   contactsArray.forEach(c => {
-    const phoneVal = c.phoneNumber || c.phone || 'No phone';
+    const phoneVal = c.phoneNumber ? formatPhoneNumber(c.phoneNumber) : 'No phone';
     html += `
       <div class="col-md-6">
         <div class="card contact-card shadow-sm p-3">
@@ -644,7 +695,7 @@ function openViewContactModal(contactId) {
   document.getElementById("editFirstName").value = contact.firstName || "";
   document.getElementById("editLastName").value = contact.lastName || "";
   document.getElementById("editEmail").value = contact.email || "";
-  document.getElementById("editPhone").value = contact.phoneNumber || contact.phone || "";
+  document.getElementById("editPhone").value = contact.phoneNumber ? formatPhoneNumber(contact.phoneNumber) : "";
   
   document.getElementById("viewModalTitle").innerText = `Edit ${contact.firstName} ${contact.lastName}`;
 
@@ -652,7 +703,8 @@ function openViewContactModal(contactId) {
   modal.show();
 }
 
-function saveContactEdits() {
+// API Integration: Update existing contact via contacts.php using PUT
+async function saveContactEdits() {
   const id = parseInt(document.getElementById("editContactId").value);
   clearContactErrors('edit');
 
@@ -684,30 +736,55 @@ function saveContactEdits() {
 
   let formattedPhone = "";
   if (phoneInput !== "") {
-    formattedPhone = formatPhoneNumber(phoneInput);
-    if (!formattedPhone) {
+    const digitsOnly = phoneInput.replace(/\D/g, "");
+    if (digitsOnly.length < 10 || digitsOnly.length > 11) {
       const el = document.getElementById("editPhoneError");
-      if (el) el.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Invalid phone number format (123-456-7890)";
+      if (el) el.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Invalid phone number format (10 or 11 digits required)";
       isValid = false;
+    } else {
+      formattedPhone = formatPhoneNumber(digitsOnly);
     }
+  }
+
+  if (emailInput === "" && phoneInput === "") {
+    const el = document.getElementById("editPhoneError");
+    if (el) el.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Phone number or email required";
+    isValid = false;
   }
 
   if (!isValid) return;
 
-  const contact = allContacts.find(c => c.id === id);
-  if (contact) {
-    contact.firstName = firstNameInput;
-    contact.lastName = lastNameInput;
-    contact.email = emailInput;
-    contact.phoneNumber = formattedPhone || phoneInput;
-    saveContactsToStorage();
+  const payload = {
+    id: id,
+    userID: userId,
+    firstName: firstNameInput,
+    lastName: lastNameInput,
+    email: emailInput,
+    phoneNumber: formattedPhone || phoneInput
+  };
+
+  try {
+    const response = await fetch(contactsUrlBase, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      const modalEl = document.getElementById('viewContactModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+
+      fetchContacts();
+    } else {
+      const data = await response.json().catch(() => ({}));
+      const el = document.getElementById("editPhoneError");
+      if (el) el.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> " + (data.error || "Failed to update contact");
+    }
+  } catch (err) {
+    const el = document.getElementById("editPhoneError");
+    if (el) el.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> " + err.message;
   }
-
-  const modalEl = document.getElementById('viewContactModal');
-  const modal = bootstrap.Modal.getInstance(modalEl);
-  if (modal) modal.hide();
-
-  fetchContacts();
 }
 
 function openDeleteModal(contactId, contactName) {
@@ -718,17 +795,32 @@ function openDeleteModal(contactId, contactName) {
   modal.show();
 }
 
-function confirmDeleteContact() {
+// API Integration: Remove contact via contacts.php using DELETE
+async function confirmDeleteContact() {
   const idToDelete = parseInt(document.getElementById("deleteContactId").value);
 
-  allContacts = allContacts.filter(c => c.id !== idToDelete);
-  saveContactsToStorage();
+  const payload = {
+    id: idToDelete,
+    userID: userId
+  };
 
-  const modalEl = document.getElementById('deleteConfirmModal');
-  const modal = bootstrap.Modal.getInstance(modalEl);
-  if (modal) modal.hide();
+  try {
+    const response = await fetch(contactsUrlBase, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  fetchContacts();
+    if (response.ok) {
+      const modalEl = document.getElementById('deleteConfirmModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+
+      fetchContacts();
+    }
+  } catch (err) {
+    console.error("Delete failed:", err);
+  }
 }
 
 function clearProfileErrors() {
@@ -762,7 +854,7 @@ function openProfileModal() {
   if (firstEl) firstEl.value = firstName || "";
   if (lastEl) lastEl.value = lastName || "";
   if (emailEl) emailEl.value = userEmail || "";
-  if (phoneEl) phoneEl.value = userPhone || "";
+  if (phoneEl) phoneEl.value = userPhone ? formatPhoneNumber(userPhone) : "";
 
   let modal = new bootstrap.Modal(document.getElementById('profileModal'));
   modal.show();
@@ -818,28 +910,31 @@ function saveProfileEdits() {
     isValid = false;
   }
 
-  const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4}$/;
-  if (newPhone !== "" && !phoneRegex.test(newPhone)) {
-    const el = document.getElementById("profilePhoneError");
-    if (el) el.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Invalid phone number format (123-456-7890)";
-    isValid = false;
+  let formattedPhone = "";
+  if (newPhone !== "") {
+    const digitsOnly = newPhone.replace(/\D/g, "");
+    if (digitsOnly.length < 10 || digitsOnly.length > 11) {
+      const el = document.getElementById("profilePhoneError");
+      if (el) el.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Invalid phone number format (10 or 11 digits required)";
+      isValid = false;
+    } else {
+      formattedPhone = formatPhoneNumber(digitsOnly);
+    }
   }
 
   if (!isValid) return;
 
   let jsonPayload = JSON.stringify({
-    userId: userId,
-    userID: userId,
+    id: userId,
     firstName: newFirstName,
     lastName: newLastName,
     userName: newUsername,
     email: newEmail,
-    phoneNumber: newPhone,
-    phone: newPhone
+    phoneNumber: formattedPhone || newPhone
   });
 
   let xhr = new XMLHttpRequest();
-  xhr.open("POST", updateProfileUrlBase, true);
+  xhr.open("PUT", updateProfileUrlBase, true);
   xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
 
   try {
@@ -850,7 +945,7 @@ function saveProfileEdits() {
           firstName = newFirstName;
           lastName = newLastName;
           userEmail = newEmail;
-          userPhone = newPhone;
+          userPhone = formattedPhone || newPhone;
 
           const navUsername = document.getElementById("navUsername");
           if (navUsername) navUsername.innerText = userName || `${firstName}`;
@@ -865,7 +960,7 @@ function saveProfileEdits() {
           if (dropdownEmail) dropdownEmail.innerText = userEmail || "Not provided";
 
           const dropdownPhone = document.getElementById("dropdownPhone");
-          if (dropdownPhone) dropdownPhone.innerText = userPhone || "Not provided";
+          if (dropdownPhone) dropdownPhone.innerText = userPhone ? formatPhoneNumber(userPhone) : "Not provided";
 
           saveCookie();
 
@@ -901,9 +996,39 @@ function saveProfileEdits() {
   }
 }
 
-function loadMutualContacts() {
+async function loadMutualContacts() {
   const mutualContainer = document.getElementById("mutualContactsList");
   if (!mutualContainer) return;
+
+  if (!userId || userId <= 0) {
+    mutualContainer.innerHTML = `<div class="text-muted small text-center py-2">No mutual contacts found.</div>`;
+    return;
+  }
+
+  try {
+    const response = await fetch(`${getMutualContactsUrlBase}?userID=${userId}`, {
+      method: 'GET'
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const suggestions = data.suggestions || [];
+
+      mutualContacts = suggestions.map((item, index) => ({
+        id: index + 1,
+        name: `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'Unknown Contact',
+        firstName: item.firstName || '',
+        lastName: item.lastName || '',
+        email: item.email || '',
+        phone: item.phoneNumber || '',
+        mutualsCount: item.mutual_count || 0
+      }));
+    } else {
+      mutualContacts = [];
+    }
+  } catch (err) {
+    mutualContacts = [];
+  }
 
   if (mutualContacts.length === 0) {
     mutualContainer.innerHTML = `<div class="text-muted small text-center py-2">No mutual contacts found.</div>`;
@@ -941,29 +1066,43 @@ function openAddMutualModal(mutualId) {
   modal.show();
 }
 
-function confirmAddMutualContact() {
+// API Integration: Add mutual contact to backend via contacts.php (POST)
+async function confirmAddMutualContact() {
   const mutualId = parseInt(document.getElementById("addMutualId").value);
   const target = mutualContacts.find(m => m.id === mutualId);
 
   if (!target) return;
 
-  allContacts.push({
-    id: Date.now(),
+  let formattedPhone = target.phone ? formatPhoneNumber(target.phone) : "";
+
+  const payload = {
+    userID: userId,
     firstName: target.firstName,
     lastName: target.lastName,
     email: target.email,
-    phoneNumber: target.phone
-  });
-  saveContactsToStorage();
+    phoneNumber: formattedPhone || target.phone
+  };
 
-  mutualContacts = mutualContacts.filter(m => m.id !== mutualId);
+  try {
+    const response = await fetch(contactsUrlBase, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  const modalEl = document.getElementById('addMutualConfirmModal');
-  const modal = bootstrap.Modal.getInstance(modalEl);
-  if (modal) modal.hide();
+    if (response.ok) {
+      mutualContacts = mutualContacts.filter(m => m.id !== mutualId);
 
-  loadMutualContacts();
-  fetchContacts();
+      const modalEl = document.getElementById('addMutualConfirmModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+
+      loadMutualContacts();
+      fetchContacts();
+    }
+  } catch (err) {
+    console.error("Adding mutual contact failed:", err);
+  }
 }
 
 function doLogout() {
@@ -974,6 +1113,7 @@ function doLogout() {
   userEmail = "";
   userPhone = "";
   userRole = 1;
+  allContacts = [];
   document.cookie = "firstName=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
   document.cookie = "lastName=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
   document.cookie = "userName=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
@@ -981,5 +1121,5 @@ function doLogout() {
   document.cookie = "phone=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
   document.cookie = "role=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
   document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-  window.location.href = "landing.html";
+  window.location.href = "index.html";
 }

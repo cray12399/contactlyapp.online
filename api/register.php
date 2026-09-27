@@ -38,6 +38,8 @@ $userName = trim($data['userName']);
 $email = trim($data['email']);
 $phoneNumber = isset($data['phoneNumber']) ? trim($data['phoneNumber']) : '';
 $password = $data['password'];
+// Extract optional role (defaults to 1 for standard users)
+$role = isset($data['role']) ? (int) $data['role'] : 1;
 
 // Make sure required fields are not empty
 if (
@@ -86,20 +88,21 @@ if ($result->num_rows > 0) {
 // Hash the password before storing it
 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-// Create the new user
+// Create the new user with role included
 $stmt = $conn->prepare(
-    'INSERT INTO Users (firstName, lastName, userName, email, phoneNumber, password)
-     VALUES (?, ?, ?, ?, ?, ?)'
+    'INSERT INTO Users (firstName, lastName, userName, email, phoneNumber, password, role)
+     VALUES (?, ?, ?, ?, ?, ?, ?)'
 );
 
 $stmt->bind_param(
-    'ssssss',
+    'ssssssi',
     $firstName,
     $lastName,
     $userName,
     $email,
     $phoneNumber,
-    $hashedPassword
+    $hashedPassword,
+    $role
 );
 
 // Execute the INSERT

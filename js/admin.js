@@ -1,42 +1,119 @@
-// Local State Data
+// Local Admin Session Data (retrieved from Cookie or Session Storage)
 let adminData = {
-  id: 1000,
-  username: "AdminMaster",
-  firstName: "System",
-  lastName: "Admin",
-  email: "admin@domain.com",
-  phone: "123-456-7890"
+  id: 0,
+  username: "",
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: ""
 };
-
-// Initial default seed users with unique usernames and IDs
-const initialUsers = [
-  { id: 122, firstName: "Matthew", lastName: "Janke", userName: "HulkS", email: "matthulksmash04@gmail.com", phone: "", enabled: true },
-  { id: 101, firstName: "Jake", lastName: "Londoner", userName: "jake_l", email: "jake.Londoner@cyber.io", phone: "407-555-0199", enabled: false },
-  { id: 102, firstName: "Michelle", lastName: "Smith", userName: "msmith", email: "michelleSmith@example.com", phone: "407-555-0123", enabled: true },
-  { id: 103, firstName: "Hungry", lastName: "Hippo", userName: "hhippo", email: "HHippo@ucf.edu", phone: "321-457-0144", enabled: true },
-  { id: 104, firstName: "Icecream", lastName: "Mike", userName: "icemike", email: "MikeAndIkes@truck.org", phone: "407-980-0188", enabled: true },
-  { id: 201, firstName: "Taylor", lastName: "Swift", userName: "tswift", email: "tSwift@fake.com", phone: "123-567-0177", enabled: true },
-  { id: 202, firstName: "Famous", lastName: "Person2", userName: "famous2", email: "lol@notFamous.org", phone: "321-999-0166", enabled: false },
-  { id: 203, firstName: "Alex", lastName: "Dicey", userName: "River", email: "rice@chicken.io", phone: "123-759-0155", enabled: true },
-  { id: 204, firstName: "Sarah", lastName: "Barnes", userName: "sBarnes", email: "barnesAndNoble@books.com", phone: "321-000-0190", enabled: true },
-  { id: 205, firstName: "David", lastName: "Eating", userName: "Taco", email: "TacoBell@theSpot.net", phone: "876-016-0142", enabled: true }
-];
 
 let usersList = [];
 let filteredUsers = [];
-let globalStatus = true;
 
 // Pagination Configuration
 let currentPage = 1;
-const rowsPerPage = 5;
+const rowsPerPage = 10;
 
 document.addEventListener("DOMContentLoaded", function () {
-  loadAdminProfile();
-  initUserData();
+  readAdminSession();
+  fetchUsersFromApi();
   attachInputListeners();
 });
 
-// Real-time error clearing on typing
+// Generic Toggle Password Visibility Helper
+function togglePasswordVisibility(inputId, btnEl) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const icon = btnEl.querySelector("i");
+  if (input.type === "password") {
+    input.type = "text";
+    if (icon) {
+      icon.classList.remove("bi-eye");
+      icon.classList.add("bi-eye-slash");
+    }
+  } else {
+    input.type = "password";
+    if (icon) {
+      icon.classList.remove("bi-eye-slash");
+      icon.classList.add("bi-eye");
+    }
+  }
+}
+
+// Dynamic Button Renderer for Toggle All
+function updateToggleAllButton() {
+  const btn = document.getElementById("toggleAllBtn");
+  if (!btn) return;
+
+  const regularUsers = usersList.filter(u => u.role !== 2);
+  const allDisabled = regularUsers.length > 0 && regularUsers.every(u => !checkIsEnabled(u));
+
+  if (allDisabled) {
+    btn.className = "btn btn-success fw-semibold";
+    btn.innerHTML = `<i class="bi bi-power me-1"></i> Enable All`;
+  } else {
+    btn.className = "btn btn-danger fw-semibold";
+    btn.innerHTML = `<i class="bi bi-power me-1"></i> Disable All`;
+  }
+}
+
+// Helper function to explicitly open the admin profile modal
+function openSelfProfileModal() {
+  loadAdminProfile();
+  const modalEl = document.getElementById('selfProfileModal');
+  if (modalEl) {
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+  }
+}
+
+// Updated Cookie Parsing Function
+function readAdminSession() {
+  adminData.id = 0;
+  adminData.firstName = "";
+  adminData.lastName = "";
+  adminData.username = "";
+  adminData.email = "";
+  adminData.phone = "";
+
+  const cookies = document.cookie.split(";");
+  for (let c of cookies) {
+    let pair = c.trim().split("=");
+    if (pair.length < 2) continue;
+    let key = pair[0].trim();
+    let value = decodeURIComponent(pair[1].trim());
+
+    if (key === "firstName") adminData.firstName = value;
+    else if (key === "lastName") adminData.lastName = value;
+    else if (key === "userId") adminData.id = parseInt(value, 10);
+    else if (key === "userName") adminData.username = value;
+    else if (key === "email") adminData.email = value;
+    else if (key === "phone" || key === "phoneNumber") adminData.phone = value;
+  }
+
+  // Fallback to Session Storage if Cookie values are incomplete
+  if (!adminData.id) {
+    const storedUser = sessionStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        adminData.id = parsed.id || 0;
+        adminData.firstName = parsed.firstName || "";
+        adminData.lastName = parsed.lastName || "";
+        adminData.username = parsed.userName || parsed.username || "";
+        adminData.email = parsed.email || "";
+        adminData.phone = parsed.phoneNumber || parsed.phone || "";
+      } catch (e) {
+        console.error("Error parsing session storage user:", e);
+      }
+    }
+  }
+
+  loadAdminProfile();
+}
+
+// Attach real-time error clearing on input change
 function attachInputListeners() {
   const inputs = document.querySelectorAll("input");
   inputs.forEach(input => {
@@ -51,7 +128,7 @@ function attachInputListeners() {
   });
 }
 
-// Helper functions for Inline Error Messages
+// Inline Error Helpers
 function setFieldError(fieldId, errorId, message) {
   const inputEl = document.getElementById(fieldId);
   const errorEl = document.getElementById(errorId);
@@ -76,14 +153,12 @@ function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// Flexible Phone Validation: Accepts all common formatting (e.g. (123) 456-7890, 123-456-7890, 1234567890, 123.456.7890)
 function validatePhone(phone) {
-  if (!phone) return true; // Optional field
+  if (!phone) return true;
   const digitsOnly = phone.replace(/\D/g, "");
-  return digitsOnly.length === 10;
+  return (digitsOnly.length === 10 || digitsOnly.length === 11);
 }
 
-// Check for duplicate username across all users and admin
 function isDuplicateUsername(username, currentUserId = null) {
   const lowerName = username.toLowerCase();
 
@@ -98,65 +173,86 @@ function isDuplicateUsername(username, currentUserId = null) {
   });
 }
 
-// Load users from localStorage or initialize defaults
-function initUserData() {
-  const storedUsers = localStorage.getItem("app_users");
-  if (storedUsers) {
-    try {
-      const parsed = JSON.parse(storedUsers);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        usersList = parsed;
-      } else {
-        usersList = [...initialUsers];
-        saveUsersToStorage();
+// Check helper to handle boolean / int / string representations from PHP
+function checkIsEnabled(user) {
+  if (user.enabled === undefined || user.enabled === null) return user.role !== 0;
+  return user.enabled === true || user.enabled === 1 || user.enabled === "1";
+}
+
+// ------------------------------------------------------------------
+// API CALLS & CORE LOGIC
+// ------------------------------------------------------------------
+
+// 1. Fetch Users List from Endpoint
+async function fetchUsersFromApi() {
+  try {
+    const response = await fetch('api/getAllUsers.php');
+    if (!response.ok) throw new Error('Failed to fetch user records');
+    
+    const data = await response.json();
+    if (data.users) {
+      usersList = data.users.map(u => ({
+        ...u,
+        phone: u.phoneNumber || u.phone || ""
+      }));
+
+      const currentAdmin = usersList.find(user => Number(user.id) === Number(adminData.id));
+      if (currentAdmin) {
+        adminData = {
+          id: Number(currentAdmin.id),
+          username: currentAdmin.userName || currentAdmin.username || "",
+          firstName: currentAdmin.firstName || "",
+          lastName: currentAdmin.lastName || "",
+          email: currentAdmin.email || "",
+          phone: currentAdmin.phoneNumber || currentAdmin.phone || ""
+        };
+        loadAdminProfile();
       }
-    } catch (e) {
-      console.error("Error reading localStorage:", e);
-      usersList = [...initialUsers];
-      saveUsersToStorage();
+
+      filterUsers(false);
     }
-  } else {
-    usersList = [...initialUsers];
-    saveUsersToStorage();
+  } catch (error) {
+    console.error("API Error (GetAllUsers):", error);
   }
-  filterUsers();
 }
 
-function saveUsersToStorage() {
-  localStorage.setItem("app_users", JSON.stringify(usersList));
-}
-
-// 1. Populate Admin Nav & Self Profile Info
+// 2. Populate Admin Nav & Self Profile Info
 function loadAdminProfile() {
   const navUser = document.getElementById("navAdminUsername");
-  if (navUser) navUser.innerText = adminData.username;
-  
+  if (navUser) navUser.innerText = adminData.username || "Admin";
+
+  const fullName = document.getElementById("ddAdminFullName");
+  if (fullName) fullName.innerText = `${adminData.firstName} ${adminData.lastName}`.trim() || "N/A";
+
+  const username = document.getElementById("ddAdminUsername");
+  if (username) username.innerText = adminData.username || "N/A";
+
   const ddId = document.getElementById("ddAdminId");
-  if (ddId) ddId.innerText = adminData.id;
+  if (ddId) ddId.innerText = adminData.id || "N/A";
 
   const ddEmail = document.getElementById("ddAdminEmail");
-  if (ddEmail) ddEmail.innerText = adminData.email;
+  if (ddEmail) ddEmail.innerText = adminData.email || "N/A";
 
   const ddPhone = document.getElementById("ddAdminPhone");
-  if (ddPhone) ddPhone.innerText = adminData.phone;
+  if (ddPhone) ddPhone.innerText = adminData.phone || "N/A";
 
   const selfId = document.getElementById("selfAdminId");
-  if (selfId) selfId.value = adminData.id;
+  if (selfId) selfId.value = adminData.id || "";
 
   const selfUn = document.getElementById("selfUsername");
-  if (selfUn) selfUn.value = adminData.username;
+  if (selfUn) selfUn.value = adminData.username || "";
 
   const selfFN = document.getElementById("selfFirstName");
-  if (selfFN) selfFN.value = adminData.firstName;
+  if (selfFN) selfFN.value = adminData.firstName || "";
 
   const selfLN = document.getElementById("selfLastName");
-  if (selfLN) selfLN.value = adminData.lastName;
+  if (selfLN) selfLN.value = adminData.lastName || "";
 
   const selfEm = document.getElementById("selfEmail");
-  if (selfEm) selfEm.value = adminData.email;
+  if (selfEm) selfEm.value = adminData.email || "";
 
   const selfPh = document.getElementById("selfPhone");
-  if (selfPh) selfPh.value = adminData.phone;
+  if (selfPh) selfPh.value = adminData.phone || "";
 
   clearFieldError("selfUsername", "selfUsernameError");
   clearFieldError("selfFirstName", "selfFirstNameError");
@@ -165,13 +261,14 @@ function loadAdminProfile() {
   clearFieldError("selfPhone", "selfPhoneError");
 }
 
-function saveSelfProfile() {
-  let isValid = true;
+// Save Self Profile changes via API
+async function saveSelfProfile() {
   const username = document.getElementById("selfUsername").value.trim();
   const firstName = document.getElementById("selfFirstName").value.trim();
   const lastName = document.getElementById("selfLastName").value.trim();
   const email = document.getElementById("selfEmail").value.trim();
   const phone = document.getElementById("selfPhone").value.trim();
+  let isValid = true;
 
   clearFieldError("selfUsername", "selfUsernameError");
   clearFieldError("selfFirstName", "selfFirstNameError");
@@ -213,20 +310,43 @@ function saveSelfProfile() {
 
   if (!isValid) return;
 
-  adminData.username = username;
-  adminData.firstName = firstName;
-  adminData.lastName = lastName;
-  adminData.email = email;
-  adminData.phone = phone;
+  const payload = {
+    id: adminData.id,
+    firstName: firstName,
+    lastName: lastName,
+    userName: username,
+    email: email,
+    phoneNumber: phone
+  };
 
-  loadAdminProfile();
+  try {
+    const response = await fetch('api/updateProfile.php', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  const modalEl = document.getElementById('selfProfileModal');
-  const modal = bootstrap.Modal.getInstance(modalEl);
-  if (modal) modal.hide();
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to update admin profile');
+
+    adminData.username = username;
+    adminData.firstName = firstName;
+    adminData.lastName = lastName;
+    adminData.email = email;
+    adminData.phone = phone;
+
+    loadAdminProfile();
+    await fetchUsersFromApi();
+
+    const modalEl = document.getElementById('selfProfileModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+  } catch (error) {
+    setFieldError("selfEmail", "selfEmailError", error.message);
+  }
 }
 
-// 2. Render Users Table with Pagination
+// 3. Table Rendering & Pagination
 function renderUserTable() {
   const tableBody = document.getElementById("userTableBody");
   if (!tableBody) return;
@@ -241,6 +361,7 @@ function renderUserTable() {
   if (totalEntries === 0) {
     tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No users found.</td></tr>`;
     renderPaginationControls(0, 0, 0, 0);
+    updateToggleAllButton();
     return;
   }
 
@@ -249,7 +370,7 @@ function renderUserTable() {
   const pageItems = filteredUsers.slice(startIndex, endIndex);
 
   pageItems.forEach(user => {
-    const isEnabled = user.enabled !== false;
+    const isEnabled = checkIsEnabled(user);
     const statusBadge = isEnabled
       ? `<span class="badge bg-success">Active</span>`
       : `<span class="badge bg-secondary">Disabled</span>`;
@@ -257,31 +378,34 @@ function renderUserTable() {
     const toggleBtnText = isEnabled ? "Disable" : "Enable";
     const toggleBtnClass = isEnabled ? "btn-outline-danger" : "btn-outline-success";
     const username = user.userName || user.username || 'N/A';
+    const isAdmin = user.role === 2;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${user.id || 'N/A'}</td>
-      <td>${user.firstName || ''} ${user.lastName || ''}</td>
+      <td>${user.firstName || ''} ${user.lastName || ''} ${isAdmin ? '<span class="badge bg-primary ms-1">Admin</span>' : ''}</td>
       <td><strong>${username}</strong></td>
       <td>${user.email || 'N/A'}</td>
-      <td>${user.phone || 'N/A'}</td>
+      <td>${user.phoneNumber || user.phone || 'N/A'}</td>
       <td>${statusBadge}</td>
       <td class="text-center">
         <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditUserModal(${user.id})">
           <i class="bi bi-pencil-square me-1"></i> Edit
         </button>
-        <button class="btn btn-sm ${toggleBtnClass}" onclick="toggleUserStatus(${user.id})">
-          <i class="bi bi-power me-1"></i> ${toggleBtnText}
-        </button>
+        ${!isAdmin ? `
+          <button class="btn btn-sm ${toggleBtnClass}" onclick="toggleUserStatus(${user.id},${!isEnabled})">
+            <i class="bi bi-power me-1"></i> ${toggleBtnText}
+          </button>
+        ` : `<button class="btn btn-sm btn-outline-secondary" disabled>System Admin</button>`}
       </td>
     `;
     tableBody.appendChild(tr);
   });
 
   renderPaginationControls(startIndex + 1, endIndex, totalEntries, totalPages);
+  updateToggleAllButton();
 }
 
-// Render Pagination Controls & Info Counter
 function renderPaginationControls(start, end, total, totalPages) {
   const infoEl = document.getElementById("paginationInfo");
   const controlsEl = document.getElementById("paginationControls");
@@ -295,13 +419,11 @@ function renderPaginationControls(start, end, total, totalPages) {
 
   if (totalPages <= 1) return;
 
-  // Previous Page
   const prevLi = document.createElement("li");
   prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
   prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Previous</a>`;
   controlsEl.appendChild(prevLi);
 
-  // Numeric Page Numbers
   for (let i = 1; i <= totalPages; i++) {
     const li = document.createElement("li");
     li.className = `page-item ${i === currentPage ? 'active' : ''}`;
@@ -309,7 +431,6 @@ function renderPaginationControls(start, end, total, totalPages) {
     controlsEl.appendChild(li);
   }
 
-  // Next Page
   const nextLi = document.createElement("li");
   nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
   nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Next</a>`;
@@ -321,66 +442,155 @@ function changePage(page) {
   renderUserTable();
 }
 
-// 3. Combined Live Search & Status Filtering
-function filterUsers() {
+// 4. Searching & Filtering
+function filterUsers(resetPage = false) {
   const searchInput = document.getElementById("userSearchInput");
   const statusSelect = document.getElementById("statusFilterSelect");
 
-  const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+  const rawQuery = searchInput ? searchInput.value.trim() : "";
   const statusFilter = statusSelect ? statusSelect.value : "all";
+
+  // Parse prefix syntax (e.g., userID:, username:, lastName:, email:, phoneNumber:)
+  let searchPrefix = "";
+  let searchTerm = rawQuery.toLowerCase();
+
+  const colonIndex = rawQuery.indexOf(":");
+  if (colonIndex !== -1) {
+    const prefixCandidate = rawQuery.substring(0, colonIndex).trim().toLowerCase();
+    const termCandidate = rawQuery.substring(colonIndex + 1).trim().toLowerCase();
+
+    // Map common prefix aliases
+    if (["userid", "id"].includes(prefixCandidate)) {
+      searchPrefix = "userid";
+    } else if (["username", "user", "username:"].includes(prefixCandidate)) {
+      searchPrefix = "username";
+    } else if (["firstname", "first"].includes(prefixCandidate)) {
+      searchPrefix = "firstname";
+    } else if (["lastname", "last"].includes(prefixCandidate)) {
+      searchPrefix = "lastname";
+    } else if (["email"].includes(prefixCandidate)) {
+      searchPrefix = "email";
+    } else if (["phonenumber", "phone"].includes(prefixCandidate)) {
+      searchPrefix = "phonenumber";
+    }
+
+    if (searchPrefix !== "") {
+      searchTerm = termCandidate;
+    }
+  }
 
   filteredUsers = usersList.filter(user => {
     const fName = (user.firstName || '').toLowerCase();
     const lName = (user.lastName || '').toLowerCase();
     const fullName = `${fName} ${lName}`.trim();
     const uName = (user.userName || user.username || '').toLowerCase();
+    const email = (user.email || '').toLowerCase();
+    const phone = (user.phoneNumber || user.phone || '').toLowerCase();
+    const userIdStr = (user.id !== undefined && user.id !== null) ? String(user.id).toLowerCase() : '';
 
-    const matchesQuery = !query || 
-                         fName.includes(query) || 
-                         lName.includes(query) || 
-                         fullName.includes(query) || 
-                         uName.includes(query);
+    let matchesQuery = false;
 
+    if (!rawQuery) {
+      matchesQuery = true;
+    } else if (searchPrefix !== "") {
+      // Prefix-specific matching logic
+      switch (searchPrefix) {
+        case "userid":
+          matchesQuery = userIdStr.includes(searchTerm);
+          break;
+        case "username":
+          matchesQuery = uName.includes(searchTerm);
+          break;
+        case "firstname":
+          matchesQuery = fName.includes(searchTerm);
+          break;
+        case "lastname":
+          matchesQuery = lName.includes(searchTerm);
+          break;
+        case "email":
+          matchesQuery = email.includes(searchTerm);
+          break;
+        case "phonenumber":
+          matchesQuery = phone.includes(searchTerm);
+          break;
+        default:
+          matchesQuery = true;
+      }
+    } else {
+      // General multi-field match
+      matchesQuery = fName.includes(searchTerm) || 
+                     lName.includes(searchTerm) || 
+                     fullName.includes(searchTerm) || 
+                     uName.includes(searchTerm) ||
+                     email.includes(searchTerm) ||
+                     phone.includes(searchTerm) ||
+                     userIdStr.includes(searchTerm);
+    }
+
+    // Status & Role Filtering
+    const isEnabled = checkIsEnabled(user);
+    const isAdmin = user.role === 2;
     let matchesStatus = true;
+
     if (statusFilter === "active") {
-      matchesStatus = user.enabled !== false;
+      matchesStatus = isEnabled;
     } else if (statusFilter === "disabled") {
-      matchesStatus = user.enabled === false;
+      matchesStatus = !isEnabled;
+    } else if (statusFilter === "admin") {
+      matchesStatus = isAdmin;
     }
 
     return matchesQuery && matchesStatus;
   });
 
-  currentPage = 1;
+  if (resetPage) {
+    currentPage = 1;
+  }
+
   renderUserTable();
 }
 
-// 4. Toggle Individual User Account Status
-function toggleUserStatus(userId) {
-  const user = usersList.find(u => u.id === userId);
-  if (user) {
-    user.enabled = user.enabled === false ? true : false;
-    saveUsersToStorage();
+// 5. Toggle Individual User Account Status
+async function toggleUserStatus(userId, targetStatus) {
+  try {
+    const response = await fetch('api/toggleUserStatus.php', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: userId, enabled: targetStatus })
+    });
 
-    // Re-filter if actively filtering by active/disabled status, otherwise stay on page
-    const statusSelect = document.getElementById("statusFilterSelect");
-    if (statusSelect && statusSelect.value !== "all") {
-      filterUsers();
-    } else {
-      renderUserTable();
-    }
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to update user status');
+
+    await fetchUsersFromApi();
+  } catch (error) {
+    alert(error.message);
   }
 }
 
-// 5. Global Toggle All Users
-function toggleAllUsers() {
-  globalStatus = !globalStatus;
-  usersList.forEach(u => u.enabled = globalStatus);
-  saveUsersToStorage();
-  filterUsers();
+// 6. Global Toggle All Regular Users
+async function toggleAllUsers() {
+  const regularUsers = usersList.filter(u => u.role !== 2);
+  const allDisabled = regularUsers.length > 0 && regularUsers.every(u => !checkIsEnabled(u));
+  const targetStatus = allDisabled;
+
+  try {
+    const response = await fetch('api/toggleAllUsers.php', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: targetStatus })
+    });
+
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to toggle all users');
+
+    await fetchUsersFromApi();
+  } catch (error) {
+    alert(error.message);
+  }
 }
 
-// 6. Edit User Modal & Password Inline Validation
+// 7. Edit User & Change Password
 function openEditUserModal(userId) {
   const user = usersList.find(u => u.id === userId);
   if (!user) return;
@@ -390,7 +600,12 @@ function openEditUserModal(userId) {
   document.getElementById("editFirstName").value = user.firstName || "";
   document.getElementById("editLastName").value = user.lastName || "";
   document.getElementById("editEmail").value = user.email || "";
-  document.getElementById("editPhone").value = user.phone || "";
+  document.getElementById("editPhone").value = user.phoneNumber || user.phone || "";
+
+  const roleSelect = document.getElementById("editUserRole");
+  if (roleSelect) {
+    roleSelect.value = user.role !== undefined ? user.role : 1;
+  }
 
   clearFieldError("editUsername", "editUsernameError");
   clearFieldError("editFirstName", "editFirstNameError");
@@ -399,6 +614,9 @@ function openEditUserModal(userId) {
   clearFieldError("editPhone", "editPhoneError");
   clearFieldError("newPassword", "newPasswordError");
   clearFieldError("confirmNewPassword", "confirmNewPasswordError");
+
+  const successMsg = document.getElementById("passwordSuccessMessage");
+  if (successMsg) successMsg.classList.add("d-none");
 
   document.getElementById("passwordSection").classList.add("d-none");
   document.getElementById("newPassword").value = "";
@@ -413,13 +631,17 @@ function togglePasswordSection() {
   section.classList.toggle("d-none");
 }
 
-function saveNewPassword() {
+async function saveNewPassword() {
+  const userId = parseInt(document.getElementById("editUserId").value, 10);
   const pass = document.getElementById("newPassword").value.trim();
   const confirm = document.getElementById("confirmNewPassword").value.trim();
   let isValid = true;
 
   clearFieldError("newPassword", "newPasswordError");
   clearFieldError("confirmNewPassword", "confirmNewPasswordError");
+
+  const successMsg = document.getElementById("passwordSuccessMessage");
+  if (successMsg) successMsg.classList.add("d-none");
 
   if (!pass || pass.length < 6) {
     setFieldError("newPassword", "newPasswordError", "Password must be at least 6 characters.");
@@ -432,19 +654,31 @@ function saveNewPassword() {
 
   if (!isValid) return;
 
-  alert("User password updated successfully!");
-  document.getElementById("passwordSection").classList.add("d-none");
+  try {
+    const response = await fetch('api/resetPassword.php', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: userId, newPassword: pass })
+    });
+
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to reset password');
+
+    if (successMsg) successMsg.classList.remove("d-none");
+    document.getElementById("passwordSection").classList.add("d-none");
+  } catch (error) {
+    setFieldError("newPassword", "newPasswordError", error.message);
+  }
 }
 
-function saveUserChanges() {
-  const userId = parseInt(document.getElementById("editUserId").value);
-  const user = usersList.find(u => u.id === userId);
-
+async function saveUserChanges() {
+  const userId = parseInt(document.getElementById("editUserId").value, 10);
   const username = document.getElementById("editUsername").value.trim();
   const firstName = document.getElementById("editFirstName").value.trim();
   const lastName = document.getElementById("editLastName").value.trim();
   const email = document.getElementById("editEmail").value.trim();
   const phone = document.getElementById("editPhone").value.trim();
+  const role = parseInt(document.getElementById("editUserRole").value, 10);
   let isValid = true;
 
   clearFieldError("editUsername", "editUsernameError");
@@ -487,23 +721,37 @@ function saveUserChanges() {
 
   if (!isValid) return;
 
-  if (user) {
-    user.userName = username;
-    user.username = username;
-    user.firstName = firstName;
-    user.lastName = lastName;
-    user.email = email;
-    user.phone = phone;
-    saveUsersToStorage();
-    renderUserTable();
-  }
+  const payload = {
+    id: userId,
+    firstName: firstName,
+    lastName: lastName,
+    userName: username,
+    email: email,
+    phoneNumber: phone,
+    role: role
+  };
 
-  const modalEl = document.getElementById('editUserModal');
-  const modal = bootstrap.Modal.getInstance(modalEl);
-  if (modal) modal.hide();
+  try {
+    const response = await fetch('api/updateProfile.php', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to update user profile');
+
+    await fetchUsersFromApi();
+
+    const modalEl = document.getElementById('editUserModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+  } catch (error) {
+    setFieldError("editEmail", "editEmailError", error.message);
+  }
 }
 
-// 7. Add New Admin Inline Validation
+// 8. Create Admin User via API
 function openAddAdminModal() {
   const nextId = usersList.length > 0 ? Math.max(...usersList.map(u => u.id || 0)) + 1 : 1001;
   document.getElementById("newAdminId").value = nextId;
@@ -528,7 +776,7 @@ function openAddAdminModal() {
   modal.show();
 }
 
-function createNewAdmin() {
+async function createNewAdmin() {
   const uname = document.getElementById("newAdminUsername").value.trim();
   const fName = document.getElementById("newAdminFirstName").value.trim();
   const lName = document.getElementById("newAdminLastName").value.trim();
@@ -589,48 +837,49 @@ function createNewAdmin() {
 
   if (!isValid) return;
 
-  const newAdminObj = {
-    id: parseInt(document.getElementById("newAdminId").value),
+  const payload = {
     firstName: fName,
     lastName: lName,
     userName: uname,
-    username: uname,
     email: email,
-    phone: phone,
-    enabled: true
+    phoneNumber: phone,
+    password: pass,
+    role: 2
   };
 
-  usersList.push(newAdminObj);
-  saveUsersToStorage();
-  filterUsers();
+  try {
+    const response = await fetch('api/register.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  const modalEl = document.getElementById('addAdminModal');
-  const modal = bootstrap.Modal.getInstance(modalEl);
-  if (modal) modal.hide();
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to create admin user');
+
+    await fetchUsersFromApi();
+
+    const modalEl = document.getElementById('addAdminModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+  } catch (error) {
+    setFieldError("newAdminEmail", "newAdminEmailError", error.message);
+  }
 }
 
-function registerUser(firstName, lastName, userName, email, phone) {
-  const newUser = {
-    id: usersList.length > 0 ? Math.max(...usersList.map(u => u.id || 0)) + 1 : 101,
-    firstName: firstName,
-    lastName: lastName,
-    userName: userName,
-    email: email || '',
-    phone: phone || '',
-    enabled: true
-  };
-
-  usersList.push(newUser);
-  saveUsersToStorage();
-  filterUsers();
-}
-
-// 8. Logout Confirmation Popup Flow
+// 9. Logout
 function openLogoutModal() {
   const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
   logoutModal.show();
 }
 
 function confirmLogout() {
+  document.cookie = "firstName=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  document.cookie = "lastName=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  document.cookie = "userName=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  document.cookie = "email=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  document.cookie = "phoneNumber=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  sessionStorage.clear();
   window.location.href = "login.html";
 }

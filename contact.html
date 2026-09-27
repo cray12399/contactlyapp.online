@@ -14,44 +14,126 @@
 
   <style>
     body {
-      background-color: #f8f9fa;
+      /* Matching Login Page Deep Radial Mesh Gradient Background */
+      background: radial-gradient(at 0% 0%, #1e1b4b 0px, transparent 50%),
+                  radial-gradient(at 100% 0%, #312e81 0px, transparent 50%),
+                  radial-gradient(at 100% 100%, #1e293b 0px, transparent 50%),
+                  radial-gradient(at 0% 100%, #0f172a 0px, transparent 50%),
+                  #020617;
       min-height: 100vh;
+      color: #0f172a;
+      position: relative;
     }
+
+    /* Subtle background ambient blur glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -20%);
+      width: 600px;
+      height: 600px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      filter: blur(150px);
+      opacity: 0.15;
+      border-radius: 50%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Glassmorphism Navigation Bar */
+    .navbar-custom {
+      background: rgba(15, 23, 42, 0.75) !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Main Cards Matching the Lavender-Blue Login Card Tone */
+    .theme-card {
+      background: rgba(210, 214, 250, 0.92) !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.6) !important;
+      border-radius: 16px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Dropdown menu matching theme card tone */
     .profile-dropdown-menu {
       min-width: 280px;
       padding: 1rem;
+      background: #d2d6fa;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 12px;
     }
+
+    /* Contact Cards */
     .contact-card {
       transition: all 0.2s ease-in-out;
-      border: 1px solid #e2e8f0 !important;
+      border: 1px solid rgba(255, 255, 255, 0.8) !important;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 12px;
     }
     .contact-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      border-color: #cbd5e1 !important;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+      border-color: #0d6efd !important;
     }
+
     .search-input-group {
       max-width: 520px;
       width: 100%;
     }
+
     .action-btn {
-      opacity: 0.7;
+      opacity: 0.75;
       transition: opacity 0.2s ease;
     }
     .action-btn:hover {
       opacity: 1;
+    }
+
+    /* Form Controls & Modal Styling */
+    .modal-content {
+      background: #d2d6fa;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    }
+    .modal-header {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .modal-footer {
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .form-control, .input-group-text {
+      border-radius: 8px;
+    }
+
+    /* Button Colors matching Login Page blue */
+    .btn-primary {
+      background-color: #0d6efd;
+      border-color: #0d6efd;
+    }
+    .btn-primary:hover {
+      background-color: #0b5ed7;
+      border-color: #0a58ca;
     }
   </style>
 </head>
 <body onload="readCookie();">
 
   <!-- TOP NAVBAR -->
-  <nav class="navbar navbar-expand navbar-dark bg-dark px-4 py-2">
+  <nav class="navbar navbar-expand navbar-dark navbar-custom px-4 py-2">
     <div class="container-fluid p-0">
       
       <!-- TOP LEFT: User Profile Dropdown -->
       <div class="dropdown">
-        <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2 rounded-3" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
           <i class="bi bi-person-circle fs-5"></i>
           <span id="navUsername">Loading...</span>
         </button>
@@ -73,7 +155,7 @@
 
       <!-- TOP RIGHT: Logout Button -->
       <div class="ms-auto">
-        <button class="btn btn-outline-danger fw-semibold" type="button" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
+        <button class="btn btn-outline-danger fw-semibold rounded-3" type="button" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
           <i class="bi bi-box-arrow-right me-1"></i> Log Out
         </button>
       </div>
@@ -82,13 +164,13 @@
   </nav>
 
   <!-- MAIN CONTAINER -->
-  <div class="container my-4">
+  <div class="container my-5 position-relative" style="z-index: 1;">
     <div class="row g-4">
 
       <!-- LEFT COLUMN: Suggested Mutuals -->
       <div class="col-lg-4">
-        <div class="card shadow-sm border-0">
-          <div class="card-header bg-white border-bottom py-3">
+        <div class="card theme-card border-0">
+          <div class="card-header bg-transparent border-bottom border-secondary border-opacity-10 py-3">
             <h5 class="fw-bold mb-0 text-dark">
               <i class="bi bi-people-fill text-primary me-2"></i>Suggested Mutuals
             </h5>
@@ -103,12 +185,12 @@
 
       <!-- RIGHT COLUMN: Contacts Header & Search -->
       <div class="col-lg-8">
-        <div class="card shadow-sm border-0 p-4">
+        <div class="card theme-card border-0 p-4">
           
           <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
             <div class="d-flex align-items-center gap-2">
-              <h3 class="fw-bold mb-0">Contacts</h3>
-              <span id="contactCountBadge" class="badge bg-secondary rounded-pill">0</span>
+              <h3 class="fw-bold mb-0 text-dark">Contacts</h3>
+              <span id="contactCountBadge" class="badge bg-primary rounded-pill">0</span>
             </div>
 
             <!-- Search Bar & Add Contact Button -->
@@ -120,7 +202,7 @@
                   <i class="bi bi-x-lg"></i>
                 </button>
               </div>
-              <button class="btn btn-primary fw-semibold text-nowrap" type="button" onclick="openAddContactModal()">
+              <button class="btn btn-primary fw-semibold text-nowrap shadow-sm" type="button" onclick="openAddContactModal()">
                 <i class="bi bi-person-plus-fill me-1"></i> Add
               </button>
             </div>
@@ -140,7 +222,7 @@
   <!-- ADD CONTACT MODAL -->
   <div class="modal fade" id="addContactModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
+      <div class="modal-content text-dark">
         <div class="modal-header">
           <h5 class="modal-title fw-bold">Add New Contact</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -154,7 +236,7 @@
             <div class="mb-3">
               <label class="form-label fw-semibold small text-muted">First Name <span class="text-danger">*</span></label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-pencil-fill text-secondary"></i></span>
+                <span class="input-group-text bg-white"><i class="bi bi-pencil-fill text-secondary"></i></span>
                 <input type="text" class="form-control" id="addFirstName" placeholder="Enter first name">
               </div>
               <span id="addFirstNameError" class="text-danger small mt-1 d-block"></span>
@@ -163,25 +245,24 @@
             <div class="mb-3">
               <label class="form-label fw-semibold small text-muted">Last Name <span class="text-danger">*</span></label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-pencil-fill text-secondary"></i></span>
+                <span class="input-group-text bg-white"><i class="bi bi-pencil-fill text-secondary"></i></span>
                 <input type="text" class="form-control" id="addLastName" placeholder="Enter last name">
               </div>
               <span id="addLastNameError" class="text-danger small mt-1 d-block"></span>
             </div>
-
             <div class="mb-3">
-              <label class="form-label fw-semibold small text-muted">Email Address (Optional)</label>
+              <label class="form-label fw-semibold small text-muted">Email Address</label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-envelope-fill text-secondary"></i></span>
+                <span class="input-group-text bg-white"><i class="bi bi-envelope-fill text-secondary"></i></span>
                 <input type="email" class="form-control" id="addEmail" placeholder="e.g. contact@example.com">
               </div>
               <span id="addEmailError" class="text-danger small mt-1 d-block"></span>
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-semibold small text-muted">Phone Number (Optional)</label>
+              <label class="form-label fw-semibold small text-muted">Phone Number</label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-telephone-fill text-secondary"></i></span>
+                <span class="input-group-text bg-white"><i class="bi bi-telephone-fill text-secondary"></i></span>
                 <input type="tel" class="form-control" id="addPhone" placeholder="e.g. 123-456-7890">
               </div>
               <span id="addPhoneError" class="text-danger small mt-1 d-block"></span>
@@ -201,7 +282,7 @@
   <!-- VIEW / EDIT CONTACT MODAL -->
   <div class="modal fade" id="viewContactModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
+      <div class="modal-content text-dark">
         <div class="modal-header">
           <h5 class="modal-title fw-bold" id="viewModalTitle">Contact Details</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -217,7 +298,7 @@
             <div class="mb-3">
               <label class="form-label fw-semibold small text-muted">First Name <span class="text-danger">*</span></label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-pencil-fill text-secondary"></i></span>
+                <span class="input-group-text bg-white"><i class="bi bi-pencil-fill text-secondary"></i></span>
                 <input type="text" class="form-control" id="editFirstName">
               </div>
               <span id="editFirstNameError" class="text-danger small mt-1 d-block"></span>
@@ -226,26 +307,26 @@
             <div class="mb-3">
               <label class="form-label fw-semibold small text-muted">Last Name <span class="text-danger">*</span></label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-pencil-fill text-secondary"></i></span>
+                <span class="input-group-text bg-white"><i class="bi bi-pencil-fill text-secondary"></i></span>
                 <input type="text" class="form-control" id="editLastName">
               </div>
               <span id="editLastNameError" class="text-danger small mt-1 d-block"></span>
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-semibold small text-muted">Email Address (Optional)</label>
+              <label class="form-label fw-semibold small text-muted">Email Address</label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-envelope-fill text-secondary"></i></span>
-                <input type="email" class="form-control" id="editEmail">
+                <span class="input-group-text bg-white"><i class="bi bi-envelope-fill text-secondary"></i></span>
+                <input type="email" class="form-control" id="editEmail" placeholder="e.g. contact@example.com">
               </div>
               <span id="editEmailError" class="text-danger small mt-1 d-block"></span>
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-semibold small text-muted">Phone Number (Optional)</label>
+              <label class="form-label fw-semibold small text-muted">Phone Number</label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-telephone-fill text-secondary"></i></span>
-                <input type="tel" class="form-control" id="editPhone">
+                <span class="input-group-text bg-white"><i class="bi bi-telephone-fill text-secondary"></i></span>
+                <input type="tel" class="form-control" id="editPhone" placeholder="e.g. 123-456-7890">
               </div>
               <span id="editPhoneError" class="text-danger small mt-1 d-block"></span>
             </div>
@@ -264,7 +345,7 @@
   <!-- ADD MUTUAL CONTACT CONFIRMATION MODAL -->
   <div class="modal fade" id="addMutualConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
+      <div class="modal-content text-dark">
         <div class="modal-header">
           <h5 class="modal-title fw-bold">Add Mutual Contact</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -286,7 +367,7 @@
   <!-- DELETE CONFIRMATION MODAL -->
   <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
+      <div class="modal-content text-dark">
         <div class="modal-header">
           <h5 class="modal-title fw-bold text-danger">Remove Contact</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -308,7 +389,7 @@
   <!-- LOGOUT CONFIRMATION MODAL -->
   <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
+      <div class="modal-content text-dark">
         <div class="modal-header">
           <h5 class="modal-title fw-bold">Confirm Log Out</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -327,7 +408,7 @@
   <!-- VIEW / EDIT PROFILE MODAL -->
   <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
+      <div class="modal-content text-dark">
         <div class="modal-header">
           <h5 class="modal-title fw-bold">User Profile</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -342,7 +423,7 @@
             <div class="mb-3">
               <label class="form-label fw-semibold small text-muted">User ID <span class="text-secondary">(Read-only)</span></label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-hash text-secondary"></i></span>
+                <span class="input-group-text bg-white"><i class="bi bi-hash text-secondary"></i></span>
                 <input type="text" class="form-control bg-light" id="profileUserId" readonly disabled>
               </div>
             </div>
@@ -351,7 +432,7 @@
             <div class="mb-3">
               <label class="form-label fw-semibold small text-muted">Username <span class="text-danger">*</span></label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-at text-secondary"></i></span>
+                <span class="input-group-text bg-white"><i class="bi bi-at text-secondary"></i></span>
                 <input type="text" class="form-control" id="profileUsername" placeholder="Enter username">
               </div>
               <span id="profileUsernameError" class="text-danger small mt-1 d-block"></span>
@@ -361,7 +442,7 @@
             <div class="mb-3">
               <label class="form-label fw-semibold small text-muted">First Name <span class="text-danger">*</span></label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-pencil-fill text-secondary"></i></span>
+                <span class="input-group-text bg-white"><i class="bi bi-pencil-fill text-secondary"></i></span>
                 <input type="text" class="form-control" id="profileFirstName" placeholder="First name">
               </div>
               <span id="profileFirstNameError" class="text-danger small mt-1 d-block"></span>
@@ -371,7 +452,7 @@
             <div class="mb-3">
               <label class="form-label fw-semibold small text-muted">Last Name <span class="text-danger">*</span></label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-pencil-fill text-secondary"></i></span>
+                <span class="input-group-text bg-white"><i class="bi bi-pencil-fill text-secondary"></i></span>
                 <input type="text" class="form-control" id="profileLastName" placeholder="Last name">
               </div>
               <span id="profileLastNameError" class="text-danger small mt-1 d-block"></span>
@@ -381,7 +462,7 @@
             <div class="mb-3">
               <label class="form-label fw-semibold small text-muted">Email Address <span class="text-danger">*</span></label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-envelope-fill text-secondary"></i></span>
+                <span class="input-group-text bg-white"><i class="bi bi-envelope-fill text-secondary"></i></span>
                 <input type="email" class="form-control" id="profileEmail" placeholder="contact@domain.ext">
               </div>
               <span id="profileEmailError" class="text-danger small mt-1 d-block"></span>
@@ -391,7 +472,7 @@
             <div class="mb-3">
               <label class="form-label fw-semibold small text-muted">Phone Number (Optional)</label>
               <div class="input-group">
-                <span class="input-group-text bg-light"><i class="bi bi-telephone-fill text-secondary"></i></span>
+                <span class="input-group-text bg-white"><i class="bi bi-telephone-fill text-secondary"></i></span>
                 <input type="tel" class="form-control" id="profilePhone" placeholder="123-456-7890">
               </div>
               <span id="profilePhoneError" class="text-danger small mt-1 d-block"></span>
