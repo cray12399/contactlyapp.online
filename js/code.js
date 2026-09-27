@@ -1,7 +1,6 @@
 const apiHost = (typeof window !== 'undefined' && window.location && (
   window.location.hostname === 'localhost' || 
   window.location.hostname === '127.0.0.1' || 
-  window.location.hostname.includes('lampjanke') ||
   window.location.hostname.includes('contactlyapp.online')
 ))
   ? '/api'
