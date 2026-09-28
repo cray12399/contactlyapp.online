@@ -31,55 +31,27 @@
       width: 100%;
       max-width: 380px;
     }
-    /* Contrast Overrides for #d2d6fa background */
-    .welcome-card h1 {
-      color: #0f172a;
-    }
-    .welcome-card .text-subtitle {
-      color: #334155;
-    }
-    .welcome-card .brand-icon {
-      color: #1e3a8a;
-    }
-    .btn-custom-outline {
-      color: #1e3a8a;
-      border: 2px solid #1e3a8a;
-      background-color: transparent;
-    }
-    .btn-custom-outline:hover {
-      background-color: #1e3a8a;
-      color: #ffffff;
-    }
-    .btn-custom-primary {
-      background-color: #1e3a8a;
-      color: #ffffff;
-      border: none;
-    }
-    .btn-custom-primary:hover {
-      background-color: #1e1b4b;
-      color: #ffffff;
-    }
   </style>
 </head>
 <body>
 
-  <main class="welcome-card text-center">
-    <i class="bi bi-person-lines-fill brand-icon display-4 mb-2 d-block"></i>
+  <div class="welcome-card text-center">
+    <i class="bi bi-person-lines-fill text-primary display-4 mb-2"></i>
     <h1 class="fw-bold h2 mb-2">Contactly</h1>
-    <p class="text-subtitle mb-4 small">Manage your contacts effortlessly in one place.</p>
+    <p class="text-secondary mb-4 small">Manage your contacts effortlessly in one place.</p>
 
     <div class="d-grid gap-3">
       <!-- Log In Button -->
-      <a href="login.html" class="btn btn-custom-primary fw-semibold py-2">
+      <a href="login.html" class="btn btn-primary fw-semibold py-2">
         <i class="bi bi-box-arrow-in-right me-1"></i> Log In
       </a>
 
       <!-- Sign Up Button -->
-      <a href="signup.html" class="btn btn-custom-outline fw-semibold py-2">
+      <a href="signup.html" class="btn btn-outline-primary fw-semibold py-2">
         <i class="bi bi-person-plus-fill me-1"></i> Sign Up
       </a>
     </div>
-  </main>
+  </div>
 
   <script src="/js/code.js"></script>
 </body>
