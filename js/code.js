@@ -1,6 +1,6 @@
 const apiHost = (typeof window !== 'undefined' && window.location && (
   window.location.hostname === 'localhost' || 
-  window.location.hostname === '127.0.0.1' || 
+  window.location.hostname === '127.0.0.1' ||
   window.location.hostname.includes('contactlyapp.online')
 ))
   ? '/api'
@@ -312,7 +312,7 @@ function doLogin() {
 
             if (userRole === 0) {
               if (loginResult) {
-                loginResult.innerHTML = "<div class='alert alert-danger mt-2 p-2'>Your account has been disabled. Contact 407-823-5117 if you have any questions!</div>";
+                loginResult.innerHTML = "<div class='alert alert-danger mt-2 p-2'>Your account has been disabled. Please contact 407-823-5117 if you have any questions</div>";
               }
               return;
             }
@@ -328,6 +328,18 @@ function doLogin() {
           } catch (e) {
             if (loginResult) {
               loginResult.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Username or Password is Incorrect";
+            }
+          }
+        } else if (this.status === 403) {
+          try {
+            let jsonObject = JSON.parse(xhr.responseText);
+            let msg = jsonObject.error || jsonObject.message || "Your account has been disabled. Please contact 407-823-5117 if you have any questions";
+            if (loginResult) {
+              loginResult.innerHTML = "<div class='alert alert-danger mt-2 p-2'>" + msg + "</div>";
+            }
+          } catch (e) {
+            if (loginResult) {
+              loginResult.innerHTML = "<div class='alert alert-danger mt-2 p-2'>Your account has been disabled. Please contact 407-823-5117 if you have any questions</div>";
             }
           }
         } else {
