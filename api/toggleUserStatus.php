@@ -27,7 +27,7 @@ $newRole = $enabled ? 1 : 0;
 $stmt = $conn->prepare(
     'UPDATE Users
      SET role = ?
-     WHERE id = ? AND role IN (0, 1)'
+     WHERE id = ?'
 );
 
 $stmt->bind_param('ii', $newRole, $userId);
