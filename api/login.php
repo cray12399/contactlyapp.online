@@ -80,7 +80,7 @@ if (!password_verify($password, $user['password'])) {
 if ($user['role'] == 0) {
     http_response_code(403);
     echo json_encode([
-        'message' => 'Account is disabled'
+        'message' => 'Your account has been disabled. Please contact 407-823-5117 if you have any questions.'
     ]);
     $stmt->close();
     $conn->close();
