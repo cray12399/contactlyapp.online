@@ -76,6 +76,17 @@ if (!password_verify($password, $user['password'])) {
     exit;
 }
 
+// User is disabled
+if ($user['role'] == 0) {
+    http_response_code(403);
+    echo json_encode([
+        'message' => 'Account is disabled'
+    ]);
+    $stmt->close();
+    $conn->close();
+    exit;
+}
+
 // Remove the password from the response
 unset($user['password']);
 
